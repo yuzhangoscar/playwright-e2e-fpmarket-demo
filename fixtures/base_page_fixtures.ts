@@ -216,25 +216,7 @@ export const test = base.extend<CryptoComPageFixture>({
 
   verifyTradingPairLoaded: async ({ page }, use) => {
     const verifyPair = async (pair: string = 'BTC_USD'): Promise<boolean> => {
-      try {
-        // Check for trading pair in URL
-        const currentUrl = page.url();
-        if (currentUrl.includes(pair)) {
-          return true;
-        }
-
-        // Check for trading pair text on page
-        const pairText = pair.replace('_', '/');
-        const pairElement = page.locator(`text="${pairText}"`).first();
-
-        if (await pairElement.isVisible({ timeout: 10000 })) {
-          return true;
-        }
-
-        return false;
-      } catch {
-        return false;
-      }
+      return page.url().includes(pair);
     };
 
     await use(verifyPair);
