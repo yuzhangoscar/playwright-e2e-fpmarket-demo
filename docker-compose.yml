@@ -1,0 +1,33 @@
+services:
+  playwright-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mount test results and reports for persistence
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+    environment:
+      - CI=true
+      - NODE_ENV=test
+    networks:
+      - playwright-network
+
+  # Optional: Report server for viewing results
+  report-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ['npx', 'playwright', 'show-report', '--host', '0.0.0.0', '--port', '9323']
+    ports:
+      - '9323:9323'
+    volumes:
+      - ./playwright-report:/app/playwright-report
+    depends_on:
+      - playwright-tests
+    networks:
+      - playwright-network
+
+networks:
+  playwright-network:
+    driver: bridge

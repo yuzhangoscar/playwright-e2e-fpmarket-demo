@@ -1,11 +1,13 @@
 # Playwright E2E Tests for FPMarket Demo
 
+[![CI Pipeline](https://github.com/brucechang/playwright-e2e-fpmarket-demo/workflows/CI%20Pipeline/badge.svg)](https://github.com/brucechang/playwright-e2e-fpmarket-demo/actions/workflows/ci.yml)
 [![Playwright Tests](https://img.shields.io/badge/playwright-^1.56.1-blue)](https://playwright.dev/)
 [![TypeScript](https://img.shields.io/badge/typescript-^5.9.3-blue)](https://www.typescriptlang.org/)
 [![ESLint](https://img.shields.io/badge/eslint-^8.57.1-purple)](https://eslint.org/)
 [![Prettier](https://img.shields.io/badge/prettier-^3.6.2-ff69b4)](https://prettier.io/)
 [![Husky](https://img.shields.io/badge/husky-^9.1.7-green)](https://typicode.github.io/husky/)
 [![Commitlint](https://img.shields.io/badge/commitlint-^20.1.0-orange)](https://commitlint.js.org/)
+[![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 📦 Installed Modules & Versions
@@ -194,6 +196,114 @@ make format
 ```bash
 make type-check
 ```
+
+## 🚀 CI/CD Pipeline
+
+This project includes a comprehensive GitHub Actions CI/CD pipeline that runs:
+
+### Workflow Overview
+
+The CI pipeline consists of four main jobs:
+
+1. **Code Quality Check** (`lint`): Validates code style, formatting, and TypeScript types
+2. **E2E Tests** (`e2e-tests`): Runs Playwright tests directly on the GitHub Actions runner
+3. **Docker E2E Tests** (`docker-tests`): Runs the same tests inside a Docker container
+4. **Test Summary** (`test-summary`): Provides a consolidated report of all test results
+
+### Pipeline Features
+
+- ✅ **Parallel Execution**: Lint checks run first, then E2E tests run in parallel
+- ✅ **Multi-Environment**: Tests both native and Docker environments
+- ✅ **Artifact Collection**: Automatically uploads test reports and results
+- ✅ **Smart Triggers**: Runs on PRs and pushes to `main`/`develop` branches
+- ✅ **Comprehensive Coverage**: ESLint, Prettier, TypeScript, and E2E tests
+
+### Local CI Testing
+
+Run the same checks locally before pushing:
+
+```bash
+# Run complete CI pipeline locally
+make ci-all
+
+# Run just linting checks
+make ci-lint
+
+# Run just tests
+make ci-test
+
+# Run Docker-based tests
+make ci-docker-test
+```
+
+### Viewing Results
+
+- **Test Reports**: Download from Actions artifacts or view in the GitHub interface
+- **Coverage**: Detailed Playwright HTML reports are generated for each run
+- **Logs**: Full test execution logs available in GitHub Actions interface
+
+## 🐳 Docker Support
+
+### Prerequisites for Docker
+
+- **Docker** (version 20.0+ recommended)
+- **Docker Compose** (version 2.0+ recommended)
+
+### Docker Commands
+
+#### Build Docker Image
+
+```bash
+make docker-build
+```
+
+#### Run Tests in Docker
+
+```bash
+make docker-test
+```
+
+#### Run Tests with Docker Compose
+
+```bash
+make docker-compose-test
+```
+
+#### Start Report Server
+
+```bash
+make docker-compose-report
+```
+
+Then open http://localhost:9323 to view test reports.
+
+#### Development with Docker
+
+```bash
+# Open shell in Docker container
+make docker-shell
+
+# Clean Docker artifacts
+make docker-clean
+
+# Rebuild Docker image
+make docker-rebuild
+```
+
+### Docker Architecture
+
+- **Base Image**: `mcr.microsoft.com/playwright:v1.41.0-focal`
+- **Multi-stage builds**: Optimized for CI/CD pipelines
+- **Volume mounting**: Test results and reports are persisted
+- **Network isolation**: Containers run in isolated network
+
+### Benefits of Docker
+
+- ✅ **Consistent Environment**: Same test environment across all machines
+- ✅ **No Local Dependencies**: No need to install browsers locally
+- ✅ **CI/CD Ready**: Easy integration with Docker-based CI systems
+- ✅ **Isolation**: Tests run in isolated containers
+- ✅ **Scalability**: Easy horizontal scaling for parallel test execution
 
 ## 📊 Test Reports
 

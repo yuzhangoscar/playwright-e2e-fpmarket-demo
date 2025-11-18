@@ -76,3 +76,44 @@ codegen: ## Generate test code using Playwright codegen
 
 doctor: ## Run Playwright system requirements check
 	npx playwright install --dry-run
+
+# Docker commands
+docker-build: ## Build Docker image
+	docker build -t playwright-e2e-tests .
+
+docker-test: ## Run tests in Docker container
+	docker run --rm -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report playwright-e2e-tests
+
+docker-test-headed: ## Run tests in Docker with headed mode
+	docker run --rm -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report playwright-e2e-tests npm run test:headed
+
+docker-shell: ## Open shell in Docker container
+	docker run --rm -it -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report playwright-e2e-tests /bin/bash
+
+docker-compose-test: ## Run tests using Docker Compose
+	docker-compose up --build playwright-tests
+
+docker-compose-report: ## Start report server using Docker Compose
+	docker-compose up --build report-server
+
+docker-clean: ## Clean Docker images and containers
+	docker system prune -f
+	docker rmi playwright-e2e-tests || true
+
+docker-rebuild: docker-clean docker-build ## Clean and rebuild Docker image
+
+# CI/CD commands
+ci-lint: ## Run all linting and type checks for CI
+	npm run lint
+	npm run format:check
+	npm run type-check
+
+ci-test: ## Run tests with CI setup
+	npm ci
+	npm test
+
+ci-docker-test: ## Run Docker tests for CI
+	docker build -t playwright-e2e-tests .
+	docker run --rm -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report playwright-e2e-tests
+
+ci-all: ci-lint ci-test ## Run complete CI pipeline locally
