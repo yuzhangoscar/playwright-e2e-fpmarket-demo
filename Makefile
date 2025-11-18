@@ -1,4 +1,7 @@
-.PHONY: help install install-browsers test test-headed test-chromium test-firefox test-webkit test-debug report clean setup
+.PHONY: help install install-browsers test test-headed test-chromium test-firefox test-webkit test-debug report clean setup \
+	lint lint-fix format format-check type-check dev build update trace codegen doctor \
+	docker-build docker-test docker-test-headed docker-shell docker-compose-test docker-compose-report docker-clean docker-rebuild \
+	ci-lint ci-test ci-docker-test ci-all clean-reports
 
 # Default target
 help: ## Show this help message
