@@ -55,6 +55,10 @@ make setup  # Installs dependencies and Playwright browsers
 make test                    # Run all E2E tests locally
 make test-allure            # Run tests with Allure reporting
 make test-accessibility     # Run WCAG accessibility tests
+
+# Direct Playwright Commands
+npx playwright test --headed   # Run tests in headed mode (visible browser)
+npx playwright test --debug    # Run tests in debug mode
 ```
 
 ### 🐳 **Docker Testing (Recommended)**
