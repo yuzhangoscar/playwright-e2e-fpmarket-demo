@@ -203,16 +203,36 @@ make help
 
 ### Essential Commands
 
+#### **🔧 Setup & Development**
+
 - `make setup` - Complete project setup (install dependencies and browsers)
+- `make lint` - Run ESLint and Prettier checks
+- `make format` - Format code with Prettier
+- `make clean` - Clean generated files and reinstall dependencies
+
+#### **🧪 Local Testing**
+
 - `make test` - Run all Playwright tests
 - `make test-allure` - Run tests with Allure reporting
+- `make test-accessibility` - Run WCAG accessibility tests
+
+#### **🐳 Docker Testing**
+
+- `make docker-test-e2e` - Run E2E tests in Docker
+- `make docker-test-api` - Run API tests in Docker
+- `make docker-test-wcag` - Run WCAG tests in Docker
+- `make docker-test-all` - Run all test suites in Docker
+- `make docker-reports` - Start report servers
+- `make docker-clean` - Clean Docker containers and volumes
+
+#### **📊 Reports**
+
 - `make allure-generate` - Generate Allure HTML report
 - `make allure-serve` - Generate and serve Allure report (auto-opens browser)
 - `make allure-open` - Open existing Allure report
-- `make lint` - Run ESLint and Prettier checks
-- `make format` - Format code with Prettier
-- `make docker-test` - Run tests in Docker container
-- `make clean` - Clean generated files and reinstall dependencies## 🧪 Running Tests
+- `make accessibility-report` - Open accessibility test report
+
+## 🧪 Running Tests
 
 ### Run all tests locally
 
@@ -452,81 +472,225 @@ make docker-test
 - **Coverage**: Detailed Playwright HTML reports are generated for each run
 - **Logs**: Full test execution logs available in GitHub Actions interface
 
-## 🐳 Docker Support
+## 🐳 Docker Support - Comprehensive Multi-Suite Testing
 
 ### Prerequisites for Docker
 
 - **Docker** (version 20.0+ recommended)
 - **Docker Compose** (version 2.0+ recommended)
 
-### Docker Commands
+### 🎯 Three Independent Test Suites
 
-#### Run Tests in Docker (Build + Test)
+This project provides **complete Docker separation** for all three test suites:
 
-```bash
-make docker-test
-```
+| Test Suite        | Docker Image                                 | Purpose                               | Port |
+| ----------------- | -------------------------------------------- | ------------------------------------- | ---- |
+| **🎭 E2E Tests**  | `mcr.microsoft.com/playwright:v1.48.0-focal` | Playwright E2E functionality testing  | 9323 |
+| **🚀 API Tests**  | `node:22-alpine`                             | Jest API server testing with coverage | 3000 |
+| **♿ WCAG Tests** | `mcr.microsoft.com/playwright:v1.48.0-focal` | Accessibility compliance testing      | 9324 |
 
-This command automatically:
+### 🚀 Quick Start Commands
 
-- Builds the Docker image with latest code
-- Runs all Playwright tests in the container
-- Saves test results, Playwright reports, and **Allure results** to local directories
-- **Maintains consistency** with CI/CD environment (same volume mounts as GitHub Actions)
-
-#### Advanced Docker Usage
+#### Run Individual Test Suites
 
 ```bash
-# Use Docker Compose for orchestrated testing
-docker-compose up --build playwright-tests
+# Run E2E tests only
+make docker-test-e2e
 
-# Start report server (optional)
-docker-compose up --build report-server
+# Run API tests only
+make docker-test-api
+
+# Run WCAG accessibility tests only
+make docker-test-wcag
+
+# Run all test suites in parallel
+make docker-test-all
 ```
 
-Then open http://localhost:9323 to view test reports.
+#### Start Report Servers
 
-### Docker Architecture & Security
+```bash
+# Start report servers for E2E and WCAG tests
+make docker-reports
 
-- **Base Image**: `mcr.microsoft.com/playwright:v1.48.0-focal` (matches npm package version)
-- **Optimized builds**: Efficient caching and minimal layers
-- **Volume mounting**: Test results, Playwright reports, and Allure results are persisted locally
-- **Environment consistency**: Same runtime as CI/CD pipeline
-- **🔒 Secure**: `.env` files excluded from Docker images (see `.dockerignore`)
+# Start API server for integration testing
+make docker-api-server
+```
+
+Access reports at:
+
+- **E2E Reports**: http://localhost:9323
+- **WCAG Reports**: http://localhost:9324
+- **API Server**: http://localhost:3000
+
+### 📁 Docker File Structure
+
+```
+docker/
+├── Dockerfile.e2e      # Playwright E2E tests
+├── Dockerfile.api      # Jest API tests
+├── Dockerfile.wcag     # WCAG accessibility tests
+└── Dockerfile.legacy   # Original combined dockerfile (backup)
+```
+
+### 🔧 Advanced Docker Usage
+
+#### Individual Service Management
+
+```bash
+# Build and run specific services
+docker-compose up --build e2e-tests
+docker-compose up --build api-tests
+docker-compose up --build wcag-tests
+
+# Run services in background
+docker-compose up -d e2e-tests api-tests wcag-tests
+
+# View logs from specific service
+docker-compose logs -f e2e-tests
+```
+
+#### Complete Testing Workflow
+
+```bash
+# 1. Run all tests
+make docker-test-all
+
+# 2. Start report servers
+make docker-reports
+
+# 3. View results in browser
+# E2E: http://localhost:9323
+# WCAG: http://localhost:9324
+
+# 4. Clean up
+make docker-clean
+```
+
+### 🎭 E2E Tests Service Details
+
+**Dockerfile**: `docker/Dockerfile.e2e`
+
+- **Base**: `mcr.microsoft.com/playwright:v1.48.0-focal`
+- **Tests**: `tests/crypto-navigation.spec.ts`
+- **Reports**: Playwright HTML + Allure
+- **Volumes**: `test-results/`, `playwright-report/`, `allure-results/`
+
+### 🚀 API Tests Service Details
+
+**Dockerfile**: `docker/Dockerfile.api`
+
+- **Base**: `node:22-alpine`
+- **Tests**: Jest API tests with coverage
+- **Features**: Health checks, TypeScript compilation
+- **Volumes**: `allure-results-api/`, `coverage-api/`
+
+### ♿ WCAG Tests Service Details
+
+**Dockerfile**: `docker/Dockerfile.wcag`
+
+- **Base**: `mcr.microsoft.com/playwright:v1.48.0-focal`
+- **Tests**: `tests/accessibility-wcag.spec.ts`
+- **Config**: `playwright.accessibility.config.ts`
+- **Volumes**: `accessibility-report/`, `accessibility-results.*`
+
+### 🔒 Security & Best Practices
 
 #### Environment Variable Security
 
-**✅ Secure Approach (Current):**
+**✅ Secure Approach:**
 
 ```bash
-# .env files are in .dockerignore - never copied to Docker images
-# Environment variables passed at runtime:
-docker run -e BASE_URL=https://custom.url -e TEST_TIMEOUT=60000 playwright-e2e-tests
+# Environment variables passed at runtime
+docker-compose up -e BASE_URL=https://custom.url e2e-tests
 
-# Or use docker-compose with host environment variables:
+# Use .env file with docker-compose
 BASE_URL=https://custom.url docker-compose up
 ```
 
-**❌ Insecure Approach (Avoided):**
+**🔒 Security Features:**
 
-- `.env` files baked into Docker images
-- Sensitive data exposed in image layers
-- Secrets accessible to anyone with image access
+- `.env` files excluded via `.dockerignore`
+- No secrets baked into images
+- Runtime environment variable injection
+- Isolated network for all services
 
-**⚠️ Current Security Level:**
+#### Volume Mounting Strategy
 
-- Environment variables visible in running containers (`docker exec`, `printenv`)
-- Acceptable for test configuration (URLs, timeouts)
-- **Not suitable for real secrets** (API keys, passwords)
-- For production secrets, use Docker Secrets or external secret management
+```bash
+# Each service mounts only its required directories
+e2e-tests:     test-results, playwright-report, allure-results
+api-tests:     allure-results-api, coverage-api
+wcag-tests:    accessibility-report, accessibility-results.*
+```
 
-### Benefits of Docker
+### 🏗️ Docker Architecture Benefits
 
-- ✅ **Consistent Environment**: Same test environment across all machines
-- ✅ **No Local Dependencies**: No need to install browsers locally
-- ✅ **CI/CD Ready**: Easy integration with Docker-based CI systems
-- ✅ **Isolation**: Tests run in isolated containers
-- ✅ **Scalability**: Easy horizontal scaling for parallel test execution
+#### **Complete Separation**
+
+- ✅ **Independent Services**: Each test suite runs in isolation
+- ✅ **Optimized Images**: Minimal dependencies per service
+- ✅ **Parallel Execution**: All suites can run simultaneously
+- ✅ **Resource Isolation**: Memory and CPU limits per service
+
+#### **Development Workflow**
+
+- ✅ **Fast Feedback**: Run only the tests you need
+- ✅ **Easy Debugging**: Isolated logs per service
+- ✅ **Consistent Environment**: Same runtime across all machines
+- ✅ **CI/CD Ready**: Direct integration with Docker-based pipelines
+
+#### **Production Ready**
+
+- ✅ **Scalable**: Easy horizontal scaling for each test type
+- ✅ **Maintainable**: Clear separation of concerns
+- ✅ **Reliable**: Consistent test environments
+- ✅ **Efficient**: Optimized build caching and layer management
+
+### 🧹 Cleanup Commands
+
+```bash
+# Stop all services and remove volumes
+make docker-clean
+
+# Manual cleanup
+docker-compose down -v
+docker system prune -f
+
+# Remove all test-related images
+docker rmi $(docker images "*test*" -q)
+```
+
+### 🔍 Troubleshooting
+
+#### Common Issues and Solutions
+
+```bash
+# Port conflicts
+docker-compose down  # Stop existing services
+lsof -ti:9323 | xargs kill -9  # Kill processes on port 9323
+
+# Permission issues with volumes
+sudo chown -R $(whoami) test-results/ playwright-report/ accessibility-report/
+
+# Container build issues
+docker-compose build --no-cache e2e-tests  # Rebuild without cache
+```
+
+#### Health Checks
+
+```bash
+# Check service status
+docker-compose ps
+
+# View service logs
+docker-compose logs e2e-tests
+docker-compose logs api-tests
+docker-compose logs wcag-tests
+
+# Test API server health
+curl http://localhost:3000/api/health
+```
 
 ## 📊 Test Reports
 

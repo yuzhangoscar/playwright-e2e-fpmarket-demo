@@ -1,4 +1,4 @@
-.PHONY: help setup test test-allure test-accessibility test-wcag-basic test-wcag test-wcag-all test-wcag-modal accessibility-report lint format docker-test clean allure-generate allure-serve allure-open
+.PHONY: help setup test test-allure test-accessibility test-wcag-basic test-wcag test-wcag-all test-wcag-modal accessibility-report lint format docker-test-e2e docker-test-api docker-test-wcag docker-test-all docker-reports docker-api-server docker-test docker-test-html docker-clean docker-validate ci-validate clean allure-generate allure-serve allure-open
 
 # Default target
 help: ## Show this help message
@@ -52,12 +52,39 @@ lint: ## Run linting and formatting checks
 format: ## Format code with Prettier
 	npm run format
 
-docker-test: ## Run tests in Docker container
-	docker build -t playwright-e2e-tests .
-	docker run --rm -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report -v $(PWD)/allure-results:/app/allure-results playwright-e2e-tests
+docker-test-e2e: ## Run E2E tests in Docker container
+	docker-compose up --build e2e-tests
 
-docker-test-html: ## Run Docker tests and generate HTML Allure report
-	make docker-test && npm run allure:generate && npm run allure:open
+docker-test-api: ## Run API tests in Docker container  
+	docker-compose up --build api-tests
+
+docker-test-wcag: ## Run WCAG accessibility tests in Docker container
+	docker-compose up --build wcag-tests
+
+docker-test-all: ## Run all test suites in Docker containers
+	docker-compose up --build e2e-tests api-tests wcag-tests
+
+docker-reports: ## Start report servers for E2E and WCAG tests
+	docker-compose up --build e2e-report-server wcag-report-server
+
+docker-api-server: ## Start API server in Docker container
+	docker-compose up --build api-server
+
+docker-test: ## Run E2E tests in Docker (legacy command for backward compatibility)
+	make docker-test-e2e
+
+docker-test-html: ## Run Docker E2E tests and generate HTML Allure report
+	make docker-test-e2e && npm run allure:generate && npm run allure:open
+
+docker-clean: ## Clean up Docker containers and volumes
+	docker-compose down -v
+	docker system prune -f
+
+docker-validate: ## Validate Docker setup and configuration
+	./scripts/validate-docker-setup.sh
+
+ci-validate: ## Test CI pipeline setup locally
+	./scripts/validate-ci-setup.sh
 
 clean: ## Clean generated files and dependencies
 	rm -rf node_modules package-lock.json test-results/ playwright-report/ blob-report/ allure-results/ allure-report/ accessibility-report/ accessibility-results.json accessibility-results.xml

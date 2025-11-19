@@ -1,32 +1,80 @@
-# Docker ignore patterns
+# Dependencies
 node_modules/
 npm-debug.log*
+yarn-error.log*
+
+# Environment files (copied separately in Dockerfiles)
 .env
 .env.local
 .env.*.local
 
-# Test artifacts
+# Test artifacts and reports
 test-results/
 playwright-report/
 blob-report/
 allure-results/
 allure-report/
+allure-results-api/
+allure-report-api/
+accessibility-report/
+accessibility-results.json
+accessibility-results.xml
+coverage-api/
 *.png
 *.webm
+*.mp4
+
+# Build outputs
+dist/
+build/
 
 # Git
 .git/
 .gitignore
+.gitattributes
 
-# IDE
+# IDE and editors
 .vscode/
+.idea/
 *.swp
 *.swo
+*.vim
 
-# OS
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Logs
 logs/
 *.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary folders
+tmp/
+temp/

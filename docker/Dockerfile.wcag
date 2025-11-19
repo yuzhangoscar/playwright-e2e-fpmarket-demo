@@ -1,0 +1,33 @@
+# Dockerfile for WCAG Accessibility Tests
+FROM mcr.microsoft.com/playwright:v1.48.0-focal
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables for accessibility testing
+ENV CI=true
+ENV BASE_URL=https://crypto.com/exchange/trade/BTC_USD
+ENV TEST_TIMEOUT=60000
+ENV HEADLESS=true
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --ignore-scripts
+
+# Copy source code and accessibility configuration
+COPY . .
+COPY playwright.accessibility.config.ts ./
+
+# Install Playwright browsers with accessibility testing dependencies
+RUN npx playwright install --with-deps
+
+# Create accessibility results directories
+RUN mkdir -p test-results accessibility-report accessibility-results
+
+# Default command to run WCAG accessibility tests
+CMD ["npm", "run", "test:accessibility"]
+
+# Expose port for accessibility report server
+EXPOSE 9324

@@ -213,3 +213,18 @@ jest.allure.config.js
 # Test coverage reports
 coverage/
 coverage-api/
+
+# Accessibility test results
+accessibility-report/
+accessibility-results.json
+accessibility-results.xml
+
+# Duplicate or backup files
+*.bak
+*.backup
+*~ 
+*_backup
+*_2.*
+jest.config\ 2.js
+tsconfig.server\ 2.json
+.env\ 2.*

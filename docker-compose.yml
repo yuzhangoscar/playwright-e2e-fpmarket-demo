@@ -1,35 +1,68 @@
 services:
-  playwright-tests:
+  # Playwright E2E Tests Service
+  e2e-tests:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.e2e
     volumes:
-      # Mount test results and reports for persistence
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
+      - ./allure-results:/app/allure-results
     environment:
       - CI=true
       - BASE_URL=${BASE_URL:-https://crypto.com/exchange/trade/BTC_USD}
       - TEST_TIMEOUT=${TEST_TIMEOUT:-30000}
       - HEADLESS=${HEADLESS:-true}
     networks:
-      - playwright-network
+      - test-network
 
-  # Optional: Report server for viewing results
-  report-server:
+  # Jest API Tests Service
+  api-tests:
     build:
       context: .
-      dockerfile: Dockerfile
-    command: ['npx', 'playwright', 'show-report', '--host', '0.0.0.0', '--port', '9323']
-    ports:
-      - '9323:9323'
+      dockerfile: docker/Dockerfile.api
     volumes:
-      - ./playwright-report:/app/playwright-report
-    depends_on:
-      - playwright-tests
+      - ./allure-results-api:/app/allure-results-api
+      - ./coverage-api:/app/coverage-api
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - API_PORT=3000
     networks:
-      - playwright-network
+      - test-network
+
+  # WCAG Accessibility Tests Service
+  wcag-tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.wcag
+    volumes:
+      - ./test-results:/app/test-results
+      - ./accessibility-report:/app/accessibility-report
+      - ./accessibility-results.json:/app/accessibility-results.json
+      - ./accessibility-results.xml:/app/accessibility-results.xml
+    environment:
+      - CI=true
+      - BASE_URL=${BASE_URL:-https://crypto.com/exchange/trade/BTC_USD}
+      - TEST_TIMEOUT=${TEST_TIMEOUT:-60000}
+      - HEADLESS=${HEADLESS:-true}
+    networks:
+      - test-network
+
+  # API Server (for testing)
+  api-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    command: ['npm', 'run', 'api:start']
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - test-network
 
 networks:
-  playwright-network:
+  test-network:
     driver: bridge

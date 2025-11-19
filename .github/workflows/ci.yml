@@ -1,697 +1,102 @@
-name: CI Pipeline
+name: CI Pipeline - E2E Tests
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
-  e2e-tests:
-    name: E2E Tests with Allure
+  e2e-docker-tests:
+    name: E2E Tests via Docker
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Setup environment file
-        run: cp .env.example .env
-
-      - name: Run E2E tests and generate Allure results
         run: |
-          npx playwright install --with-deps
-          # Ensure allure-results directory exists
-          mkdir -p allure-results
-          # Show environment info
-          echo "Node.js version: $(node --version)"
-          echo "npm version: $(npm --version)"
-          echo "Checking .env file:"
-          ls -la .env || echo ".env file not found"
-          # Show Playwright version and config
-          npx playwright --version
-          echo "Playwright config check:"
-          cat playwright.config.ts | grep -A 5 -B 5 "reporter" || echo "Could not find reporter config"
-          echo "Running E2E tests with Allure reporter (excluding accessibility tests)..."
-          # Run only E2E tests with multiple reporters including Allure
-          # Exclude accessibility tests which have their own dedicated job
-          # Store exit code but don't exit early to ensure Allure results are processed
-          npx playwright test tests/crypto-navigation.spec.ts --reporter=list,allure-playwright
-          TEST_EXIT_CODE=$?
-          echo "Test execution completed with exit code: $TEST_EXIT_CODE"
-          # Verify results were generated
-          echo "Checking allure-results directory:"
-          ls -la allure-results/ || echo "No allure results generated"
-          echo "File count in allure-results:"
-          find allure-results/ -type f | wc -l || echo "0"
-          echo "Sample result file contents (if any):"
-          find allure-results/ -name "*.json" -type f | head -1 | xargs cat | head -5 || echo "No JSON files found"
-          # Continue with success for CI purposes even if tests failed
-          exit 0
-
-      - name: Set up Java for Allure CLI
-        if: always()
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Cache Allure CLI
-        if: always()
-        uses: actions/cache@v4
-        id: allure-cache
-        with:
-          path: /opt/allure
-          key: allure-2.25.0
-
-      - name: Install Allure CLI
-        if: always() && steps.allure-cache.outputs.cache-hit != 'true'
-        run: |
-          curl -o allure-commandline.zip -Ls https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip
-          unzip -q allure-commandline.zip
-          sudo mv allure-2.25.0 /opt/allure
-
-      - name: Setup Allure CLI PATH
-        if: always()
-        run: |
-          sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
-          allure --version
-
-      - name: Generate Allure HTML report
-        if: always()
-        run: |
-          echo "Checking allure-results before generation:"
-          ls -la ./allure-results/ || echo "allure-results directory not found"
-          echo "File count in allure-results:"
-          find ./allure-results/ -type f | wc -l || echo "0"
-
-          # Only generate report if we have result files
-          if [ "$(find ./allure-results/ -name '*.json' | wc -l)" -gt 0 ]; then
-            echo "Found Allure result files, generating HTML report..."
-            allure generate ./allure-results -o ./allure-report --clean
+          if [ -f .env.example ]; then
+            cp .env.example .env
           else
-            echo "No Allure result files found, creating empty report..."
-            mkdir -p ./allure-report
-            echo "<html><body><h1>No test results found</h1><p>E2E tests ran but no Allure results were generated.</p></body></html>" > ./allure-report/index.html
+            echo "BASE_URL=https://crypto.com/exchange/trade/BTC_USD" > .env
+            echo "TEST_TIMEOUT=30000" >> .env
+            echo "HEADLESS=true" >> .env
           fi
 
-      - name: Upload E2E Allure HTML report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-allure-report-pr-${{ github.event.number }}
-          path: ./allure-report
-
-  accessibility-tests:
-    name: WCAG Accessibility Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Setup environment file
-        run: cp .env.example .env
-
-      - name: Install browsers for accessibility testing
-        run: npx playwright install --with-deps
-
-      - name: Run WCAG Accessibility Tests
+      - name: Build E2E Docker image
         run: |
-          echo "Starting WCAG accessibility compliance testing..."
-          echo "Node.js version: $(node --version)"
-          echo "Playwright version: $(npx playwright --version)"
+          echo "🐳 Building E2E Docker image..."
+          docker build -f docker/Dockerfile.e2e -t e2e-tests .
 
-          # Show accessibility config and test files
-          echo "Accessibility configuration:"
-          cat playwright.accessibility.config.ts | head -20
+      - name: Run E2E tests in Docker
+        run: |
+          echo "🧪 Running E2E tests in Docker container..."
           
-          echo "Checking for accessibility test files:"
-          ls -la tests/accessibility* || echo "No accessibility test files found"
+          # Create directories for test results
+          mkdir -p test-results playwright-report allure-results
           
-          echo "Testing config with list command first:"
-          npm run test:accessibility -- --list || echo "Could not list tests"
+          # Run E2E tests with volume mounts for results
+          docker run --rm \
+            -v $(pwd)/test-results:/app/test-results \
+            -v $(pwd)/playwright-report:/app/playwright-report \
+            -v $(pwd)/allure-results:/app/allure-results \
+            -e CI=true \
+            -e BASE_URL=https://crypto.com/exchange/trade/BTC_USD \
+            -e TEST_TIMEOUT=30000 \
+            -e HEADLESS=true \
+            e2e-tests
 
-          # Run comprehensive accessibility test suite using npm script
-          echo "Running complete WCAG accessibility test suite..."
-          npm run test:accessibility
-
-          # Store exit code but continue to generate reports
-          ACCESSIBILITY_EXIT_CODE=$?
-          echo "Accessibility tests completed with exit code: $ACCESSIBILITY_EXIT_CODE"
-
-          # Verify accessibility results
-          echo "Checking accessibility test results..."
-          ls -la accessibility-report/ || echo "No accessibility report directory found"
-          ls -la accessibility-results.* || echo "No accessibility result files found"
-
-          # Show test summary
-          if [ -f "accessibility-results.json" ]; then
-            echo "Accessibility results JSON summary:"
-            cat accessibility-results.json | jq '.stats // "No stats found"' || echo "Could not parse JSON results"
-          fi
-
-          # Exit with original test result code
-          exit $ACCESSIBILITY_EXIT_CODE
-
-      - name: Upload Accessibility Test Results
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: accessibility-test-results-pr-${{ github.event.number }}
+          name: e2e-test-results-pr-${{ github.event.number }}
           path: |
-            accessibility-report/
-            accessibility-results.json
-            accessibility-results.xml
             test-results/
+            playwright-report/
+            allure-results/
+          retention-days: 7
 
-      - name: Generate Accessibility Test Summary
+      - name: Generate test summary
         if: always()
         run: |
-          echo "## 🌐 WCAG Accessibility Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "## 🧪 E2E Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ -f "accessibility-results.json" ]; then
-            # Parse results using jq if available
-            if command -v jq &> /dev/null; then
-              TOTAL_TESTS=$(cat accessibility-results.json | jq -r '.stats.expected // 0')
-              PASSED_TESTS=$(cat accessibility-results.json | jq -r '.stats.ok // 0') 
-              FAILED_TESTS=$(cat accessibility-results.json | jq -r '.stats.unexpected // 0')
-              FLAKY_TESTS=$(cat accessibility-results.json | jq -r '.stats.flaky // 0')
-              
-              echo "### Test Statistics" >> $GITHUB_STEP_SUMMARY
-              echo "- 🧪 **Total Tests:** $TOTAL_TESTS" >> $GITHUB_STEP_SUMMARY
-              echo "- ✅ **Passed:** $PASSED_TESTS" >> $GITHUB_STEP_SUMMARY  
-              echo "- ❌ **Failed:** $FAILED_TESTS" >> $GITHUB_STEP_SUMMARY
-              echo "- 🔄 **Flaky:** $FLAKY_TESTS" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              
-              if [ "$FAILED_TESTS" -gt 0 ]; then
-                echo "### ⚠️ Accessibility Issues Found" >> $GITHUB_STEP_SUMMARY
-                echo "This pull request introduces or maintains accessibility violations." >> $GITHUB_STEP_SUMMARY
-                echo "Please review the detailed accessibility report in the artifacts." >> $GITHUB_STEP_SUMMARY
-                echo "" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "### ✅ All Accessibility Tests Passed" >> $GITHUB_STEP_SUMMARY
-                echo "Great work! This pull request maintains accessibility compliance." >> $GITHUB_STEP_SUMMARY
-                echo "" >> $GITHUB_STEP_SUMMARY
-              fi
-            else
-              echo "### ℹ️ Accessibility Tests Completed" >> $GITHUB_STEP_SUMMARY
-              echo "Detailed results are available in the test artifacts." >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-            fi
-          else
-            echo "### ⚠️ No Accessibility Results Found" >> $GITHUB_STEP_SUMMARY
-            echo "Accessibility tests may have failed to run or generate results." >> $GITHUB_STEP_SUMMARY
+          
+          # Check if test results exist
+          if [ -d "test-results" ] && [ "$(ls -A test-results)" ]; then
+            echo "### ✅ Test Execution Completed" >> $GITHUB_STEP_SUMMARY
+            echo "E2E tests have been executed via Docker container." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
-          echo "- **HTML Report:** Download \`accessibility-test-results-pr-${{ github.event.number }}\` artifact" >> $GITHUB_STEP_SUMMARY
-          echo "- **JSON Results:** Machine-readable test results" >> $GITHUB_STEP_SUMMARY
-          echo "- **XML Results:** JUnit-compatible format for CI integration" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🔍 WCAG Guidelines Tested" >> $GITHUB_STEP_SUMMARY
-          echo "- **WCAG 2.1 Level A & AA:** Core accessibility requirements" >> $GITHUB_STEP_SUMMARY
-          echo "- **WCAG 2.2 Level AAA:** Advanced accessibility standards" >> $GITHUB_STEP_SUMMARY
-          echo "- **Multi-Browser:** Chrome, Firefox, Safari, Mobile, Tablet" >> $GITHUB_STEP_SUMMARY
-          echo "- **Automated Modal Handling:** Cookie banners and tutorial popups" >> $GITHUB_STEP_SUMMARY
-
-  api-tests:
-    name: API Tests with Jest
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build API server
-        run: npm run api:build
-
-      - name: Run Jest API tests with Allure
-        run: |
-          # Install Jest Allure reporter  
-          npm install --save-dev jest-allure2-reporter
-
-          # Ensure allure-results-api directory exists
-          mkdir -p allure-results-api
-
-          # Create Jest config for Allure reporting
-          cat > jest.allure.config.js << 'EOF'
-          module.exports = {
-            preset: 'ts-jest',
-            testEnvironment: 'node',
-            roots: ['<rootDir>/tests'],
-            testMatch: ['**/*.test.ts'],
-            transform: {
-              '^.+\\.ts$': 'ts-jest',
-            },
-
-            collectCoverageFrom: [
-              'src/**/*.ts',
-              '!src/**/*.d.ts',
-            ],
-            coverageDirectory: 'coverage-api',
-            coverageReporters: ['text', 'lcov', 'html'],
-            setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-            testTimeout: 10000,
-            verbose: true,
-            reporters: [
-              'default',
-              ['jest-allure2-reporter', {
-                resultsDir: './allure-results-api',
-                labels: {
-                  package: 'API Tests',
-                  testClass: 'Jest API Tests',
-                  testMethod: '{{testTitle}}',
-                  parentSuite: 'Mock API Server',
-                  suite: '{{ancestorTitles}}',
-                  subSuite: '{{title}}'
-                }
-              }]
-            ]
-          };
-          EOF
-
-          # Debug Jest setup
-          echo "Jest configuration:"
-          cat jest.allure.config.js
-          echo "Checking API test file:"
-          ls -la tests/api.test.ts || echo "API test file not found"
-
-          # Run Jest tests with Allure reporter
-          echo "Running Jest API tests..."
-          npx jest --config=jest.allure.config.js tests/api.test.ts
-          TEST_EXIT_CODE=$?
-          echo "Jest completed with exit code: $TEST_EXIT_CODE"
-
-          # Check if any results were generated
-          echo "Checking allure-results-api directory:"
-          ls -la allure-results-api/ || echo "No results directory"
-          echo "Result files count:"
-          find allure-results-api/ -type f | wc -l || echo "0"
-
-      - name: Set up Java for Allure CLI
-        if: always()
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Cache Allure CLI
-        if: always()
-        uses: actions/cache@v4
-        id: allure-cache-api
-        with:
-          path: /opt/allure
-          key: allure-2.25.0
-
-      - name: Install Allure CLI
-        if: always() && steps.allure-cache-api.outputs.cache-hit != 'true'
-        run: |
-          curl -o allure-commandline.zip -Ls https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip
-          unzip -q allure-commandline.zip
-          sudo mv allure-2.25.0 /opt/allure
-
-      - name: Setup Allure CLI PATH
-        if: always()
-        run: |
-          sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
-          allure --version
-
-      - name: Generate API Allure HTML report
-        if: always()
-        run: |
-          # Check if we have any Allure result files
-          RESULT_COUNT=$(find ./allure-results-api -name "*.json" -type f | wc -l || echo "0")
-          echo "Found $RESULT_COUNT Allure result files"
-
-          if [ "$RESULT_COUNT" -gt 0 ]; then
-            echo "Generating Allure report from $RESULT_COUNT result files..."
             
-            # Add missing executor.json file to prevent GA plugin issues
-            cat > ./allure-results-api/executor.json << 'EOF'
-          {
-            "name": "GitHub Actions",
-            "type": "github",
-            "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "buildOrder": ${{ github.run_number }},
-            "buildName": "API Tests #${{ github.run_number }}",
-            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "reportUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }
-          EOF
+            # Count test files
+            TEST_COUNT=$(find test-results -name "*.xml" -o -name "*.json" | wc -l)
+            echo "- 📁 **Result Files Generated:** $TEST_COUNT" >> $GITHUB_STEP_SUMMARY
             
-            # Add environment.properties to provide context
-            cat > ./allure-results-api/environment.properties << 'EOF'
-          Browser=Node.js
-          Test.Framework=Jest
-          Environment=GitHub Actions
-          Node.Version=${{ matrix.node-version || '22' }}
-          Repository=${{ github.repository }}
-          Branch=${{ github.ref_name }}
-          Commit=${{ github.sha }}
-          EOF
-            
-            # Try to generate report with error handling
-            if ! allure generate ./allure-results-api -o ./allure-report-api --clean; then
-              echo "Standard Allure generation failed. Trying with plugins disabled..."
-              # Create a simple allure config to disable problematic plugins
-              mkdir -p ~/.allure
-              cat > ~/.allure/allure.yml << 'EOF'
-          plugins:
-            - junit-xml-plugin
-            - xunit-xml-plugin
-            - trx-plugin
-            - behaviors-plugin
-            - packages-plugin
-            - screen-diff-plugin
-            - xctest-plugin
-            - jira-plugin
-            - xray-plugin
-          EOF
-              allure generate ./allure-results-api -o ./allure-report-api --clean --config ~/.allure/allure.yml || echo "Allure generation with custom config also failed"
+            # Check for screenshots/videos (indicates failures)
+            SCREENSHOT_COUNT=$(find test-results -name "*.png" -o -name "*.webm" | wc -l)
+            if [ "$SCREENSHOT_COUNT" -gt 0 ]; then
+              echo "- 📸 **Screenshots/Videos:** $SCREENSHOT_COUNT (failures detected)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ✅ **No failure artifacts found**" >> $GITHUB_STEP_SUMMARY
             fi
           else
-            echo "No Allure results found. Creating placeholder report..."
-            mkdir -p ./allure-report-api
-            cat > ./allure-report-api/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>API Test Results - No Tests Run</title>
-              <style>
-                  body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-                  .warning { color: #ff6b6b; background: #fff5f5; padding: 20px; border-radius: 8px; }
-              </style>
-          </head>
-          <body>
-              <h1>API Test Results</h1>
-              <div class="warning">
-                  <h2>No API tests were executed</h2>
-                  <p>The Jest API tests did not run successfully or no test results were generated.</p>
-                  <p>Check the CI logs for more details about test execution failures.</p>
-              </div>
-          </body>
-          </html>
-          EOF
+            echo "### ⚠️ No Test Results Found" >> $GITHUB_STEP_SUMMARY
+            echo "Tests may have failed to run or generate results." >> $GITHUB_STEP_SUMMARY
           fi
-
-      - name: Upload API Allure HTML report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-allure-report-pr-${{ github.event.number }}
-          path: ./allure-report-api
-
-  deploy:
-    name: Deploy Allure report to GitHub Pages
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build API server
-        run: npm run api:build
-
-      - name: Run Jest API tests with Allure
-        run: |
-          # Install Jest Allure reporter
-          npm install --save-dev jest-allure2-reporter
-
-          # Create Jest config for Allure reporting
-          cat > jest.allure.config.js << 'EOF'
-          module.exports = {
-            preset: 'ts-jest',
-            testEnvironment: 'node',
-            roots: ['<rootDir>/tests'],
-            testMatch: ['**/*.test.ts'],
-            transform: {
-              '^.+\\.ts$': 'ts-jest',
-            },
-            collectCoverageFrom: [
-              'src/**/*.ts',
-              '!src/**/*.d.ts',
-            ],
-            coverageDirectory: 'coverage-api',
-            coverageReporters: ['text', 'lcov', 'html'],
-            setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-            testTimeout: 10000,
-            verbose: true,
-            reporters: [
-              'default',
-              ['jest-allure2-reporter', {
-                resultsDir: './allure-results-api',
-                overwriteResultsDir: true,
-                testMapper: {
-                  epic: 'Mock API Server',
-                  feature: '{{ancestorTitles}}',
-                  story: '{{testTitle}}',
-                  severity: 'normal',
-                  tag: ['api', 'jest', 'integration']
-                },
-                environmentInfo: {
-                  framework: 'Jest',
-                  language: 'JavaScript/TypeScript',
-                  node_version: process.version,
-                  platform: process.platform
-                },
-                executorInfo: {
-                  name: 'GitHub Actions',
-                  type: 'github'
-                }
-              }]
-            ]
-          };
-          EOF
-
-          # Run Jest tests with Allure reporter
-          npx jest --config=jest.allure.config.js tests/api.test.ts || exit 0
-
-      - name: Run E2E tests and generate Allure results
-        run: |
-          npx playwright install --with-deps
-          npx playwright test || exit 0
-
-      - name: Set up Java for Allure CLI
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Cache Allure CLI
-        uses: actions/cache@v4
-        id: allure-cache
-        with:
-          path: /opt/allure
-          key: allure-2.25.0
-
-      - name: Install Allure CLI
-        if: steps.allure-cache.outputs.cache-hit != 'true'
-        run: |
-          curl -o allure-commandline.zip -Ls https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip
-          unzip -q allure-commandline.zip
-          sudo mv allure-2.25.0 /opt/allure
-
-      - name: Setup Allure CLI PATH
-        run: |
-          sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
-          allure --version
-
-      - name: Generate E2E Allure HTML report
-        run: |
-          allure generate ./allure-results -o ./allure-report-e2e --clean
-
-      - name: Generate API Allure HTML report
-        run: |
-          allure generate ./allure-results-api -o ./allure-report-api --clean
-
-      - name: Create Reports Index
-        run: |
-          mkdir -p ./allure-report-with-index/allure-reports/e2e
-          mkdir -p ./allure-report-with-index/allure-reports/api
-          cp -r ./allure-report-e2e ./allure-report-with-index/allure-reports/e2e/${{ github.run_number }}
-          cp -r ./allure-report-api ./allure-report-with-index/allure-reports/api/${{ github.run_number }}
-
-          cat > ./allure-report-with-index/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html>
-          <head>
-              <title>Test Reports - E2E & API</title>
-              <meta charset="UTF-8">
-              <style>
-                  body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-                  .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                  h1 { color: #333; border-bottom: 2px solid #007acc; padding-bottom: 10px; }
-                  .report-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; }
-                  .report-link { display: block; padding: 15px; margin: 10px 0; color: white; text-decoration: none; border-radius: 5px; transition: background 0.3s; }
-                  .e2e-link { background: #007acc; }
-                  .e2e-link:hover { background: #005a9e; }
-                  .api-link { background: #28a745; }
-                  .api-link:hover { background: #218838; }
-                  .latest { background: #dc3545; }
-                  .latest:hover { background: #c82333; }
-                  .meta { color: #666; font-size: 14px; margin-top: 5px; }
-              </style>
-          </head>
-          <body>
-              <div class="container">
-                  <h1>🧪 Test Reports Dashboard</h1>
-                  <p>Comprehensive E2E and API test results with Allure reporting</p>
-                  
-                  <div class="report-section">
-                      <h2>🎭 E2E Tests (Playwright)</h2>
-                      <a href="./allure-reports/e2e/${{ github.run_number }}/" class="report-link e2e-link">
-                          📊 Latest E2E Report (Run #${{ github.run_number }})
-                          <div class="meta">Playwright E2E Tests - Generated: $(date)</div>
-                      </a>
-                  </div>
-                  
-                  <div class="report-section">
-                      <h2>🚀 API Tests (Jest)</h2>
-                      <a href="./allure-reports/api/${{ github.run_number }}/" class="report-link api-link">
-                          📈 Latest API Report (Run #${{ github.run_number }})
-                          <div class="meta">Mock API Server Tests - Generated: $(date)</div>
-                      </a>
-                  </div>
-                  
-                  <h3>📁 All Reports</h3>
-                  <p>Reports are organized by test type and GitHub Actions run number.</p>
-                  
-                  <h3>🔗 Direct Access</h3>
-                  <p>Replace <code>[RUN_NUMBER]</code> with the specific run number:</p>
-                  <code>https://yuzhangoscar.github.io/playwright-e2e-fpmarket-demo/allure-reports/[RUN_NUMBER]/</code>
-              </div>
-          </body>
-          </html>
-          EOF
-
-      - name: Create .nojekyll file
-        run: |
-          touch ./allure-report-with-index/.nojekyll
-
-      - name: Deploy Allure Report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./allure-report-with-index
-          keep_files: true
-
-      - name: Output Allure Report URLs
-        run: |
-          echo "## 📊 Test Reports Published" >> $GITHUB_STEP_SUMMARY
+          
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎭 **E2E Report:** https://yuzhangoscar.github.io/playwright-e2e-fpmarket-demo/allure-reports/e2e/${{ github.run_number }}/" >> $GITHUB_STEP_SUMMARY
-          echo "🚀 **API Report:** https://yuzhangoscar.github.io/playwright-e2e-fpmarket-demo/allure-reports/api/${{ github.run_number }}/" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
+          echo "Download the \`e2e-test-results-pr-${{ github.event.number }}\` artifact to view:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Playwright HTML Report:** Open \`playwright-report/index.html\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Results:** Raw test execution data in \`test-results/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Allure Results:** For Allure report generation in \`allure-results/\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📊 **Reports Dashboard:** https://yuzhangoscar.github.io/playwright-e2e-fpmarket-demo/" >> $GITHUB_STEP_SUMMARY
-
-      - name: Deploy API Server to AWS EC2
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-        run: |
-          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$EC2_HOST" ] || [ -z "$EC2_SSH_KEY" ]; then
-            echo "⚠️ AWS deployment skipped: Missing required secrets"
-            echo "Required: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, EC2_HOST, EC2_SSH_KEY"
-            exit 0
-          fi
-
-          # Install AWS CLI if not present
-          if ! command -v aws &> /dev/null; then
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-          fi
-
-          # Setup SSH key
-          mkdir -p ~/.ssh
-          echo "$EC2_SSH_KEY" > ~/.ssh/ec2_key.pem
-          chmod 600 ~/.ssh/ec2_key.pem
-
-          # Deploy using deployment script
-          chmod +x ./deployment/deploy.sh
-          ./deployment/deploy.sh "$EC2_HOST" ~/.ssh/ec2_key.pem main
-
-          # Output deployment info
-          echo "## 🚀 API Server Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🔗 **Health Check:** http://$EC2_HOST:3000/api/health" >> $GITHUB_STEP_SUMMARY
-          echo "📋 **Blacklist API:** http://$EC2_HOST:3000/api/blacklist" >> $GITHUB_STEP_SUMMARY
-          echo "🔍 **Check Name:** http://$EC2_HOST:3000/api/blacklist/check/malicious_user" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎭 Tests Executed" >> $GITHUB_STEP_SUMMARY
+          echo "- **E2E Navigation Tests:** Crypto trading platform functionality" >> $GITHUB_STEP_SUMMARY
+          echo "- **Browser:** Chromium in Docker container" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Headless mode with consistent Docker runtime" >> $GITHUB_STEP_SUMMARY
