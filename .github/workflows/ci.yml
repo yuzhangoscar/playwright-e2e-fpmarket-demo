@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Cache node modules
         uses: actions/cache@v4
@@ -39,7 +39,32 @@ jobs:
       - name: Run E2E tests and generate Allure results
         run: |
           npx playwright install --with-deps
-          npx playwright test || exit 0
+          # Ensure allure-results directory exists
+          mkdir -p allure-results
+          # Show environment info
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Checking .env file:"
+          ls -la .env || echo ".env file not found"
+          # Show Playwright version and config
+          npx playwright --version
+          echo "Playwright config check:"
+          cat playwright.config.ts | grep -A 5 -B 5 "reporter" || echo "Could not find reporter config"
+          echo "Running E2E tests with Allure reporter..."
+          # Run tests with multiple reporters including Allure
+          # Store exit code but don't exit early to ensure Allure results are processed
+          npx playwright test --reporter=list,allure-playwright
+          TEST_EXIT_CODE=$?
+          echo "Test execution completed with exit code: $TEST_EXIT_CODE"
+          # Verify results were generated
+          echo "Checking allure-results directory:"
+          ls -la allure-results/ || echo "No allure results generated"
+          echo "File count in allure-results:"
+          find allure-results/ -type f | wc -l || echo "0"
+          echo "Sample result file contents (if any):"
+          find allure-results/ -name "*.json" -type f | head -1 | xargs cat | head -5 || echo "No JSON files found"
+          # Continue with success for CI purposes even if tests failed
+          exit 0
 
       - name: Set up Java for Allure CLI
         if: always()
@@ -72,7 +97,20 @@ jobs:
       - name: Generate Allure HTML report
         if: always()
         run: |
-          allure generate ./allure-results -o ./allure-report --clean
+          echo "Checking allure-results before generation:"
+          ls -la ./allure-results/ || echo "allure-results directory not found"
+          echo "File count in allure-results:"
+          find ./allure-results/ -type f | wc -l || echo "0"
+          
+          # Only generate report if we have result files
+          if [ "$(find ./allure-results/ -name '*.json' | wc -l)" -gt 0 ]; then
+            echo "Found Allure result files, generating HTML report..."
+            allure generate ./allure-results -o ./allure-report --clean
+          else
+            echo "No Allure result files found, creating empty report..."
+            mkdir -p ./allure-report
+            echo "<html><body><h1>No test results found</h1><p>E2E tests ran but no Allure results were generated.</p></body></html>" > ./allure-report/index.html
+          fi
 
       - name: Upload E2E Allure HTML report
         if: always()
@@ -92,7 +130,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Cache node modules
         uses: actions/cache@v4
