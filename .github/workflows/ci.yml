@@ -249,7 +249,50 @@ jobs:
           
           if [ "$RESULT_COUNT" -gt 0 ]; then
             echo "Generating Allure report from $RESULT_COUNT result files..."
-            allure generate ./allure-results-api -o ./allure-report-api --clean
+            
+            # Add missing executor.json file to prevent GA plugin issues
+            cat > ./allure-results-api/executor.json << 'EOF'
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "buildOrder": ${{ github.run_number }},
+            "buildName": "API Tests #${{ github.run_number }}",
+            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "reportUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          EOF
+            
+            # Add environment.properties to provide context
+            cat > ./allure-results-api/environment.properties << 'EOF'
+          Browser=Node.js
+          Test.Framework=Jest
+          Environment=GitHub Actions
+          Node.Version=${{ matrix.node-version || '22' }}
+          Repository=${{ github.repository }}
+          Branch=${{ github.ref_name }}
+          Commit=${{ github.sha }}
+          EOF
+            
+            # Try to generate report with error handling
+            if ! allure generate ./allure-results-api -o ./allure-report-api --clean; then
+              echo "Standard Allure generation failed. Trying with plugins disabled..."
+              # Create a simple allure config to disable problematic plugins
+              mkdir -p ~/.allure
+              cat > ~/.allure/allure.yml << 'EOF'
+          plugins:
+            - junit-xml-plugin
+            - xunit-xml-plugin
+            - trx-plugin
+            - behaviors-plugin
+            - packages-plugin
+            - screen-diff-plugin
+            - xctest-plugin
+            - jira-plugin
+            - xray-plugin
+          EOF
+              allure generate ./allure-results-api -o ./allure-report-api --clean --config ~/.allure/allure.yml || echo "Allure generation with custom config also failed"
+            fi
           else
             echo "No Allure results found. Creating placeholder report..."
             mkdir -p ./allure-report-api
@@ -337,13 +380,23 @@ jobs:
               'default',
               ['jest-allure2-reporter', {
                 resultsDir: './allure-results-api',
-                labels: {
-                  package: 'API Tests',
-                  testClass: 'Jest API Tests',
-                  testMethod: '{{testTitle}}',
-                  parentSuite: 'Mock API Server',
-                  suite: '{{ancestorTitles}}',
-                  subSuite: '{{title}}'
+                overwriteResultsDir: true,
+                testMapper: {
+                  epic: 'Mock API Server',
+                  feature: '{{ancestorTitles}}',
+                  story: '{{testTitle}}',
+                  severity: 'normal',
+                  tag: ['api', 'jest', 'integration']
+                },
+                environmentInfo: {
+                  framework: 'Jest',
+                  language: 'JavaScript/TypeScript',
+                  node_version: process.version,
+                  platform: process.platform
+                },
+                executorInfo: {
+                  name: 'GitHub Actions',
+                  type: 'github'
                 }
               }]
             ]
