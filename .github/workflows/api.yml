@@ -1,0 +1,71 @@
+name: API Tests
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-tests:
+    name: Jest API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Jest API tests
+        run: npm run api:test
+
+      - name: Upload API test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-test-results-${{ github.event.number || github.run_number }}
+          path: |
+            coverage-api/
+            allure-results-api/
+          retention-days: 7
+
+      - name: Generate API test summary
+        if: always()
+        run: |
+          echo "## 🚀 API Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "coverage-api/lcov.info" ]; then
+            echo "### ✅ API Tests Completed" >> $GITHUB_STEP_SUMMARY
+            echo "Jest API tests have been executed successfully." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Check for test coverage
+            if [ -d "coverage-api" ]; then
+              echo "- 📊 **Test Coverage:** Generated in \`coverage-api/\`" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            if [ -d "allure-results-api" ]; then
+              echo "- 📋 **Allure Results:** Available for report generation" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "### ⚠️ API Test Issues Detected" >> $GITHUB_STEP_SUMMARY
+            echo "API tests may have failed or not generated expected outputs." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
+          echo "Download the \`api-test-results-${{ github.event.number || github.run_number }}\` artifact to view:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Coverage Report:** Open \`coverage-api/index.html\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Allure Results:** For detailed API test reporting" >> $GITHUB_STEP_SUMMARY
