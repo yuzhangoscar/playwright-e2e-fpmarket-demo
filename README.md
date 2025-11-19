@@ -10,6 +10,8 @@
 [![Docker](https://img.shields.io/badge/docker-supported-blue)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+A comprehensive E2E testing framework with Playwright, Allure reporting, and a mock API server for testing scenarios.
+
 ## 📦 Installed Modules & Versions
 
 | Module                               | Version  | Purpose                          |
@@ -50,7 +52,9 @@ This test suite is designed to validate the functionality and user experience of
 ## 🚀 Features
 
 - **Multi-Browser Support**: Tests run on Chromium, Firefox, and WebKit
+- **Mock API Server**: Node.js/Express server with health check and blacklist endpoints
 - **Parallel Execution**: Fast test execution with parallel test runs
+- **AWS Deployment**: CloudFormation templates and EC2 deployment scripts
 - **Visual Testing**: Screenshot comparison and visual regression testing
 - **Mobile Testing**: Responsive design validation on mobile viewports
 - **CI/CD Ready**: Integration with continuous integration pipelines
@@ -63,17 +67,32 @@ playwright-e2e-fpmarket-demo/
 │   ├── auth/                # Authentication tests
 │   ├── trading/             # Trading functionality tests
 │   ├── portfolio/           # Portfolio management tests
-│   └── navigation/          # Navigation and UI tests
+│   ├── navigation/          # Navigation and UI tests
+│   └── api.test.ts          # API server tests
+├── src/                     # Mock API server source code
+│   ├── server.ts            # Express server main file
+│   ├── routes/              # API route handlers
+│   │   ├── health.ts        # Health check endpoints
+│   │   └── blacklist.ts     # Blacklist management endpoints
+│   └── data/                # Data stores
+│       └── blacklistStore.ts # In-memory blacklist store
+├── deployment/              # AWS deployment scripts
+│   ├── deploy.sh            # EC2 manual deployment
+│   ├── cloudformation.yaml  # Infrastructure as Code
+│   └── cloudformation-deploy.sh # CloudFormation helper
 ├── pages/                   # Page Object Model classes (TypeScript)
 ├── fixtures/                # Test data and fixtures
 ├── utils/                   # Helper functions and utilities (TypeScript)
 ├── .husky/                  # Git hooks configuration
 ├── playwright.config.ts     # Playwright configuration (TypeScript)
 ├── tsconfig.json           # TypeScript configuration
+├── tsconfig.server.json    # Server TypeScript configuration
+├── jest.config.js          # Jest configuration for API tests
 ├── .eslintrc.js            # ESLint configuration
 ├── .prettierrc             # Prettier configuration
 ├── .commitlintrc.js        # Commitlint configuration
 ├── Makefile                # Make commands
+├── API_README.md           # API server documentation
 └── package.json            # Project dependencies and scripts
 ```
 
@@ -102,6 +121,49 @@ Or run individual steps:
 ```bash
 make setup  # Complete setup: install dependencies and browsers
 ```
+
+## 🖥️ Mock API Server
+
+This project includes a Node.js/Express mock API server for testing scenarios with health check and blacklist endpoints.
+
+### Quick Start
+
+```bash
+# Start development server with hot reloading
+npm run api:dev
+
+# Build and start production server
+npm run api:build
+npm run api:start
+
+# Run API tests
+npm run api:test
+```
+
+### API Endpoints
+
+- **Health Check**: `GET /api/health` - Basic health status
+- **Detailed Health**: `GET /api/health/detailed` - System metrics
+- **Blacklist**: `GET /api/blacklist` - Get all blacklisted entries
+- **Check Name**: `GET /api/blacklist/check/{name}` - Check if name is blacklisted
+- **Add Entry**: `POST /api/blacklist` - Add new blacklist entry
+- **Remove Entry**: `DELETE /api/blacklist/{name}` - Remove blacklist entry
+
+### AWS Deployment
+
+Deploy to AWS EC2 using CloudFormation:
+
+```bash
+# Deploy infrastructure and application
+./deployment/cloudformation-deploy.sh playwright-api-stack my-key-pair
+
+# Or manual deployment to existing EC2
+./deployment/deploy.sh <EC2_IP> <SSH_KEY_PATH>
+```
+
+For detailed API documentation, see [API_README.md](./API_README.md).
+
+For AWS deployment setup and configuration, see [AWS_DEPLOYMENT.md](./AWS_DEPLOYMENT.md).
 
 ## 🔧 Configuration
 

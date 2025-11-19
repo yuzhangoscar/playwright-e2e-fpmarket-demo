@@ -1,0 +1,291 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Playwright Mock API Server on EC2'
+
+Parameters:
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t3.micro
+      - t3.small
+      - t3.medium
+    Description: EC2 instance type
+    
+  SSHLocation:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: IP address range for SSH access (use your IP for security)
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
+    
+  GitRepository:
+    Type: String
+    Default: https://github.com/yuzhangoscar/playwright-e2e-fpmarket-demo.git
+    Description: Git repository URL for the application
+    
+  GitBranch:
+    Type: String
+    Default: main
+    Description: Git branch to deploy
+
+Resources:
+  # Security Group
+  PlaywrightAPISecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Playwright Mock API Server
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref SSHLocation
+          Description: SSH access
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+          Description: API Server port
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: HTTP
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS
+      Tags:
+        - Key: Name
+          Value: playwright-api-security-group
+        - Key: Project
+          Value: playwright-e2e-mock-api
+
+  # IAM Role for EC2 (optional, for CloudWatch logs)
+  PlaywrightAPIRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+      Tags:
+        - Key: Name
+          Value: playwright-api-role
+        - Key: Project
+          Value: playwright-e2e-mock-api
+
+  # Instance Profile
+  PlaywrightAPIInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref PlaywrightAPIRole
+
+  # EC2 Instance
+  PlaywrightAPIInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0c02fb55956c7d316  # Amazon Linux 2 AMI (update for your region)
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
+      SecurityGroupIds:
+        - !Ref PlaywrightAPISecurityGroup
+      IamInstanceProfile: !Ref PlaywrightAPIInstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          
+          # Install CloudWatch agent
+          yum install -y amazon-cloudwatch-agent
+          
+          # Install Node.js 18
+          curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+          yum install -y nodejs git
+          
+          # Install PM2 globally
+          npm install -g pm2
+          
+          # Create app user
+          useradd -m -s /bin/bash appuser
+          
+          # Clone repository
+          cd /home/appuser
+          git clone -b ${GitBranch} ${GitRepository} app
+          chown -R appuser:appuser /home/appuser/app
+          
+          # Switch to app user and setup application
+          sudo -u appuser bash << 'EOF'
+          cd /home/appuser/app
+          npm install
+          npm run api:build
+          
+          # Create environment file
+          cat > .env << 'ENVEOF'
+          NODE_ENV=production
+          PORT=3000
+          LOG_LEVEL=info
+          CORS_ORIGIN=*
+          ENVEOF
+          
+          # Create PM2 ecosystem file
+          cat > ecosystem.config.js << 'ECOEOF'
+          module.exports = {
+            apps: [{
+              name: 'playwright-api',
+              script: './dist/server.js',
+              instances: 1,
+              autorestart: true,
+              watch: false,
+              max_memory_restart: '1G',
+              env: {
+                NODE_ENV: 'production',
+                PORT: 3000
+              },
+              error_file: './logs/err.log',
+              out_file: './logs/out.log',
+              log_file: './logs/combined.log',
+              time: true
+            }]
+          };
+          ECOEOF
+          
+          # Create logs directory
+          mkdir -p logs
+          
+          # Start application with PM2
+          pm2 start ecosystem.config.js
+          pm2 save
+          EOF
+          
+          # Setup PM2 startup for appuser
+          sudo -u appuser pm2 startup | tail -n 1 | bash
+          
+          # Install and configure CloudWatch agent (optional)
+          cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWEOF'
+          {
+            "logs": {
+              "logs_collected": {
+                "files": {
+                  "collect_list": [
+                    {
+                      "file_path": "/home/appuser/app/logs/combined.log",
+                      "log_group_name": "/aws/ec2/playwright-api",
+                      "log_stream_name": "{instance_id}-app.log"
+                    }
+                  ]
+                }
+              }
+            },
+            "metrics": {
+              "namespace": "CWAgent",
+              "metrics_collected": {
+                "cpu": {
+                  "measurement": [
+                    "cpu_usage_idle",
+                    "cpu_usage_iowait",
+                    "cpu_usage_user",
+                    "cpu_usage_system"
+                  ],
+                  "metrics_collection_interval": 60
+                },
+                "disk": {
+                  "measurement": [
+                    "used_percent"
+                  ],
+                  "metrics_collection_interval": 60,
+                  "resources": [
+                    "*"
+                  ]
+                },
+                "mem": {
+                  "measurement": [
+                    "mem_used_percent"
+                  ],
+                  "metrics_collection_interval": 60
+                }
+              }
+            }
+          }
+          CWEOF
+          
+          # Start CloudWatch agent
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+            -a fetch-config -m ec2 -s \
+            -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+      
+      Tags:
+        - Key: Name
+          Value: playwright-mock-api-server
+        - Key: Project
+          Value: playwright-e2e-mock-api
+        - Key: Environment
+          Value: production
+
+  # Elastic IP (optional)
+  PlaywrightAPIElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref PlaywrightAPIInstance
+      Tags:
+        - Key: Name
+          Value: playwright-api-eip
+        - Key: Project
+          Value: playwright-e2e-mock-api
+
+  # CloudWatch Log Group
+  PlaywrightAPILogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/ec2/playwright-api
+      RetentionInDays: 7
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the newly created EC2 instance
+    Value: !Ref PlaywrightAPIInstance
+    Export:
+      Name: !Sub ${AWS::StackName}-InstanceId
+
+  PublicIP:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt PlaywrightAPIInstance.PublicIp
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicIP
+
+  ElasticIP:
+    Description: Elastic IP address of the instance
+    Value: !Ref PlaywrightAPIElasticIP
+    Export:
+      Name: !Sub ${AWS::StackName}-ElasticIP
+
+  HealthEndpoint:
+    Description: Health check endpoint URL
+    Value: !Sub http://${PlaywrightAPIElasticIP}:3000/api/health
+    Export:
+      Name: !Sub ${AWS::StackName}-HealthEndpoint
+
+  BlacklistEndpoint:
+    Description: Blacklist API endpoint URL
+    Value: !Sub http://${PlaywrightAPIElasticIP}:3000/api/blacklist
+    Export:
+      Name: !Sub ${AWS::StackName}-BlacklistEndpoint
+
+  SSHCommand:
+    Description: SSH command to connect to the instance
+    Value: !Sub ssh -i ${KeyPairName}.pem ec2-user@${PlaywrightAPIElasticIP}
+    Export:
+      Name: !Sub ${AWS::StackName}-SSHCommand

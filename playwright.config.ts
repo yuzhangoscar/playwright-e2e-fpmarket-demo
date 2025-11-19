@@ -7,6 +7,9 @@ dotenv.config();
  */
 export default defineConfig({
   testDir: './tests',
+  /* Only run Playwright E2E tests, exclude API tests */
+  testMatch: ['**/*.spec.ts', '**/*e2e*.ts'],
+  testIgnore: ['**/api.test.ts', '**/*.api.test.ts'],
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
