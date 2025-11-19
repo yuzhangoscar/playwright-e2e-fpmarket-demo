@@ -23,11 +23,40 @@ COPY playwright.config.ts ./
 # Install Playwright browsers
 RUN npx playwright install --with-deps
 
-# Create results directories
-RUN mkdir -p test-results playwright-report allure-results
+# Install Java (required for Allure CLI)
+RUN apt-get update && apt-get install -y default-jre && rm -rf /var/lib/apt/lists/*
+RUN java -version
 
-# Default command to run E2E tests only
-CMD ["npx", "playwright", "test", "tests/crypto-navigation.spec.ts", "--reporter=list,allure-playwright"]
+# Create results directories
+RUN mkdir -p test-results playwright-report allure-results allure-report
+
+# Install Allure CLI for generating HTML reports
+RUN npm install -g allure-commandline
+
+# Create a script to run tests and generate reports
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "Running E2E tests..."\n\
+npx playwright test tests/crypto-navigation.spec.ts --reporter=list,allure-playwright\n\
+\n\
+echo "Generating Allure HTML report..."\n\
+if [ -d "allure-results" ] && [ "$(ls -A allure-results)" ]; then\n\
+  allure generate allure-results --clean -o allure-report\n\
+  echo "Allure HTML report generated successfully at allure-report/"\n\
+  echo "Report files:"\n\
+  ls -la allure-report/ | head -10\n\
+else\n\
+  echo "No allure-results found or directory is empty"\n\
+fi\n\
+\n\
+echo "Test execution completed!"' > /app/run-tests.sh
+
+# Make the script executable
+RUN chmod +x /app/run-tests.sh
+
+# Default command to run E2E tests and generate reports
+CMD ["/app/run-tests.sh"]
 
 # Expose port for report server
 EXPOSE 9323

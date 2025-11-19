@@ -8,6 +8,7 @@ services:
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
       - ./allure-results:/app/allure-results
+      - ./allure-report:/app/allure-report
     environment:
       - CI=true
       - BASE_URL=${BASE_URL:-https://crypto.com/exchange/trade/BTC_USD}
@@ -60,6 +61,30 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+    networks:
+      - test-network
+
+  # E2E Allure Report Server
+  e2e-allure-server:
+    image: nginx:alpine
+    volumes:
+      - ./allure-report:/usr/share/nginx/html:ro
+    ports:
+      - '9001:80'
+    depends_on:
+      - e2e-tests
+    networks:
+      - test-network
+
+  # API Allure Report Server  
+  api-allure-server:
+    image: nginx:alpine
+    volumes:
+      - ./allure-report-api:/usr/share/nginx/html:ro
+    ports:
+      - '9002:80'
+    depends_on:
+      - api-tests
     networks:
       - test-network
 

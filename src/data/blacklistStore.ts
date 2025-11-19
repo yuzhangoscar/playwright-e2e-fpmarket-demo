@@ -69,7 +69,7 @@ export class BlacklistStore {
   }
 
   public isBlacklisted(name: string): boolean {
-    return this.blacklistedNames.hasOwnProperty(name.toLowerCase());
+    return Object.prototype.hasOwnProperty.call(this.blacklistedNames, name.toLowerCase());
   }
 
   public getBlacklistEntry(name: string): BlacklistEntry | undefined {
@@ -91,7 +91,7 @@ export class BlacklistStore {
 
   public removeFromBlacklist(name: string): boolean {
     const key = name.toLowerCase();
-    if (this.blacklistedNames.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(this.blacklistedNames, key)) {
       delete this.blacklistedNames[key];
       return true;
     }
