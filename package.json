@@ -29,6 +29,10 @@
     "api:test": "jest tests/api.test.ts",
     "api:test:watch": "jest tests/api.test.ts --watch",
     "api:test:coverage": "jest tests/api.test.ts --coverage",
+    "api:test:allure": "npm run api:test && npm run api:allure:generate && npm run api:allure:open",
+    "api:allure:generate": "allure generate ./allure-results-api -o ./allure-report-api --clean",
+    "api:allure:serve": "allure serve ./allure-results-api",
+    "api:allure:open": "allure open ./allure-report-api",
     "api:health": "curl http://localhost:3000/api/health",
     "prepare": "husky"
   },

@@ -12,4 +12,32 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
   verbose: true,
+  reporters: [
+    'default',
+    [
+      'jest-allure2-reporter',
+      {
+        resultsDir: './allure-results-api',
+        testMapper: (testResult, testCase) => ({
+          fullName: testCase.fullName,
+          title: testCase.title,
+          labels: [
+            {
+              name: 'suite',
+              value:
+                testResult.testFilePath.split('/').pop()?.replace('.test.ts', '') || 'API Tests',
+            },
+            {
+              name: 'epic',
+              value: 'API Testing',
+            },
+            {
+              name: 'feature',
+              value: 'Mock API Server',
+            },
+          ],
+        }),
+      },
+    ],
+  ],
 };
