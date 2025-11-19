@@ -244,6 +244,106 @@ npx playwright test tests/crypto-navigation.spec.ts
 npx playwright show-report
 ```
 
+## ♿ WCAG Accessibility Testing
+
+This project includes comprehensive WCAG (Web Content Accessibility Guidelines) compliance testing using axe-core integration with Playwright.
+
+### Quick Start - WCAG Testing
+
+```bash
+# Run basic WCAG 2.1 AA compliance test
+make test-wcag-basic
+
+# Run complete WCAG test suite (2.1 Level A, AA + 2.2 Level AAA)
+make test-wcag-all
+
+# View accessibility report
+make accessibility-report
+```
+
+### Available WCAG Commands
+
+- `make test-wcag-basic` - Single critical WCAG 2.1 AA test
+- `make test-wcag` - Full WCAG 2.1 Level A & AA compliance tests
+- `make test-wcag-all` - Complete WCAG 2.1/2.2 suite (Level A, AA, AAA)
+- `make test-wcag-modal` - Test modal dismissal functionality only
+- `make test-accessibility` - Run all accessibility tests
+- `make accessibility-report` - Open accessibility test report
+
+### WCAG Testing Features
+
+- ✅ **WCAG 2.1 Level A & AA Compliance**: Core accessibility standards
+- ✅ **WCAG 2.2 Level AAA Testing**: Advanced accessibility requirements
+- ✅ **Multi-Browser Support**: Chrome, Firefox, Safari, Mobile, Tablet
+- ✅ **Automated Modal Dismissal**: Handles cookie banners and tutorial popups
+- ✅ **Detailed Violation Reports**: HTML reports with specific fix recommendations
+- ✅ **High-Contrast Mode Testing**: Validates accessibility in high-contrast themes
+- ✅ **Keyboard Navigation**: Tests for proper keyboard accessibility
+
+### WCAG Test Categories
+
+#### Critical Issues (Level A)
+
+- Missing alt attributes on images
+- Form elements without proper labels
+- Missing button text or ARIA labels
+- Keyboard navigation problems
+
+#### Standard Issues (Level AA)
+
+- Color contrast ratios below 4.5:1
+- Missing focus indicators
+- Improper heading structure
+- Insufficient text spacing
+
+#### Advanced Issues (Level AAA)
+
+- Color contrast ratios below 7:1
+- Advanced keyboard navigation
+- Enhanced visual focus indicators
+- Comprehensive screen reader support
+
+### Understanding WCAG Reports
+
+After running WCAG tests, view detailed reports:
+
+```bash
+# Open interactive HTML accessibility report
+make accessibility-report
+
+# Or use Playwright command directly
+npx playwright show-report accessibility-report
+```
+
+#### Report Contents
+
+- 🔍 **Violation Details**: Specific WCAG rules violated with element selectors
+- 📸 **Screenshots**: Visual context for accessibility issues
+- 🏷️ **WCAG References**: Direct links to official WCAG documentation
+- 🎯 **Fix Recommendations**: Specific suggestions for resolving violations
+- 📊 **Impact Levels**: Critical, Serious, Moderate, and Minor issues categorized
+
+### Manual Accessibility Testing
+
+For comprehensive accessibility validation, combine automated WCAG tests with:
+
+- **Screen Reader Testing**: NVDA, JAWS, VoiceOver
+- **Keyboard Navigation**: Tab order, focus management, shortcuts
+- **High Contrast Mode**: Windows High Contrast, browser extensions
+- **Color Blindness**: Deuteranopia, Protanopia, Tritanopia simulation
+- **Mobile Accessibility**: Voice control, switch navigation, magnification
+
+### WCAG Configuration
+
+Accessibility tests use a specialized configuration:
+
+- **Config File**: `playwright.accessibility.config.ts`
+- **Test Files**: `tests/accessibility-*.spec.ts`
+- **Setup**: `tests/accessibility-setup.ts`
+- **Documentation**: `ACCESSIBILITY.md`
+
+For detailed accessibility testing documentation, see [ACCESSIBILITY.md](./ACCESSIBILITY.md).
+
 ## 📊 Allure Test Reports
 
 ### Local Allure Reports

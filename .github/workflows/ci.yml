@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: write
@@ -104,7 +104,7 @@ jobs:
           ls -la ./allure-results/ || echo "allure-results directory not found"
           echo "File count in allure-results:"
           find ./allure-results/ -type f | wc -l || echo "0"
-          
+
           # Only generate report if we have result files
           if [ "$(find ./allure-results/ -name '*.json' | wc -l)" -gt 0 ]; then
             echo "Found Allure result files, generating HTML report..."
@@ -121,6 +121,132 @@ jobs:
         with:
           name: e2e-allure-report-pr-${{ github.event.number }}
           path: ./allure-report
+
+  accessibility-tests:
+    name: WCAG Accessibility Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup environment file
+        run: cp .env.example .env
+
+      - name: Install browsers for accessibility testing
+        run: npx playwright install --with-deps
+
+      - name: Run WCAG Accessibility Tests
+        run: |
+          echo "Starting WCAG accessibility compliance testing..."
+          echo "Node.js version: $(node --version)"
+          echo "Playwright version: $(npx playwright --version)"
+
+          # Show accessibility config
+          echo "Accessibility configuration:"
+          cat playwright.accessibility.config.ts | head -20
+
+          # Run comprehensive accessibility test suite
+          echo "Running complete WCAG 2.1/2.2 accessibility test suite..."
+          npx playwright test --config=playwright.accessibility.config.ts --reporter=html,json,junit
+
+          # Store exit code but continue to generate reports
+          ACCESSIBILITY_EXIT_CODE=$?
+          echo "Accessibility tests completed with exit code: $ACCESSIBILITY_EXIT_CODE"
+
+          # Verify accessibility results
+          echo "Checking accessibility test results..."
+          ls -la accessibility-report/ || echo "No accessibility report directory found"
+          ls -la accessibility-results.* || echo "No accessibility result files found"
+
+          # Show test summary
+          if [ -f "accessibility-results.json" ]; then
+            echo "Accessibility results JSON summary:"
+            cat accessibility-results.json | jq '.stats // "No stats found"' || echo "Could not parse JSON results"
+          fi
+
+          # Exit with original test result code
+          exit $ACCESSIBILITY_EXIT_CODE
+
+      - name: Upload Accessibility Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-test-results-pr-${{ github.event.number }}
+          path: |
+            accessibility-report/
+            accessibility-results.json
+            accessibility-results.xml
+            test-results/
+
+      - name: Generate Accessibility Test Summary
+        if: always()
+        run: |
+          echo "## 🌐 WCAG Accessibility Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "accessibility-results.json" ]; then
+            # Parse results using jq if available
+            if command -v jq &> /dev/null; then
+              TOTAL_TESTS=$(cat accessibility-results.json | jq -r '.stats.expected // 0')
+              PASSED_TESTS=$(cat accessibility-results.json | jq -r '.stats.ok // 0') 
+              FAILED_TESTS=$(cat accessibility-results.json | jq -r '.stats.unexpected // 0')
+              FLAKY_TESTS=$(cat accessibility-results.json | jq -r '.stats.flaky // 0')
+              
+              echo "### Test Statistics" >> $GITHUB_STEP_SUMMARY
+              echo "- 🧪 **Total Tests:** $TOTAL_TESTS" >> $GITHUB_STEP_SUMMARY
+              echo "- ✅ **Passed:** $PASSED_TESTS" >> $GITHUB_STEP_SUMMARY  
+              echo "- ❌ **Failed:** $FAILED_TESTS" >> $GITHUB_STEP_SUMMARY
+              echo "- 🔄 **Flaky:** $FLAKY_TESTS" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              if [ "$FAILED_TESTS" -gt 0 ]; then
+                echo "### ⚠️ Accessibility Issues Found" >> $GITHUB_STEP_SUMMARY
+                echo "This pull request introduces or maintains accessibility violations." >> $GITHUB_STEP_SUMMARY
+                echo "Please review the detailed accessibility report in the artifacts." >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "### ✅ All Accessibility Tests Passed" >> $GITHUB_STEP_SUMMARY
+                echo "Great work! This pull request maintains accessibility compliance." >> $GITHUB_STEP_SUMMARY
+                echo "" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "### ℹ️ Accessibility Tests Completed" >> $GITHUB_STEP_SUMMARY
+              echo "Detailed results are available in the test artifacts." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "### ⚠️ No Accessibility Results Found" >> $GITHUB_STEP_SUMMARY
+            echo "Accessibility tests may have failed to run or generate results." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
+          echo "- **HTML Report:** Download \`accessibility-test-results-pr-${{ github.event.number }}\` artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- **JSON Results:** Machine-readable test results" >> $GITHUB_STEP_SUMMARY
+          echo "- **XML Results:** JUnit-compatible format for CI integration" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔍 WCAG Guidelines Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- **WCAG 2.1 Level A & AA:** Core accessibility requirements" >> $GITHUB_STEP_SUMMARY
+          echo "- **WCAG 2.2 Level AAA:** Advanced accessibility standards" >> $GITHUB_STEP_SUMMARY
+          echo "- **Multi-Browser:** Chrome, Firefox, Safari, Mobile, Tablet" >> $GITHUB_STEP_SUMMARY
+          echo "- **Automated Modal Handling:** Cookie banners and tutorial popups" >> $GITHUB_STEP_SUMMARY
 
   api-tests:
     name: API Tests with Jest
@@ -153,10 +279,10 @@ jobs:
         run: |
           # Install Jest Allure reporter  
           npm install --save-dev jest-allure2-reporter
-          
+
           # Ensure allure-results-api directory exists
           mkdir -p allure-results-api
-          
+
           # Create Jest config for Allure reporting
           cat > jest.allure.config.js << 'EOF'
           module.exports = {
@@ -193,19 +319,19 @@ jobs:
             ]
           };
           EOF
-          
+
           # Debug Jest setup
           echo "Jest configuration:"
           cat jest.allure.config.js
           echo "Checking API test file:"
           ls -la tests/api.test.ts || echo "API test file not found"
-          
+
           # Run Jest tests with Allure reporter
           echo "Running Jest API tests..."
           npx jest --config=jest.allure.config.js tests/api.test.ts
           TEST_EXIT_CODE=$?
           echo "Jest completed with exit code: $TEST_EXIT_CODE"
-          
+
           # Check if any results were generated
           echo "Checking allure-results-api directory:"
           ls -la allure-results-api/ || echo "No results directory"
@@ -246,7 +372,7 @@ jobs:
           # Check if we have any Allure result files
           RESULT_COUNT=$(find ./allure-results-api -name "*.json" -type f | wc -l || echo "0")
           echo "Found $RESULT_COUNT Allure result files"
-          
+
           if [ "$RESULT_COUNT" -gt 0 ]; then
             echo "Generating Allure report from $RESULT_COUNT result files..."
             
@@ -356,7 +482,7 @@ jobs:
         run: |
           # Install Jest Allure reporter
           npm install --save-dev jest-allure2-reporter
-          
+
           # Create Jest config for Allure reporting
           cat > jest.allure.config.js << 'EOF'
           module.exports = {
@@ -402,7 +528,7 @@ jobs:
             ]
           };
           EOF
-          
+
           # Run Jest tests with Allure reporter
           npx jest --config=jest.allure.config.js tests/api.test.ts || exit 0
 
@@ -450,7 +576,7 @@ jobs:
           mkdir -p ./allure-report-with-index/allure-reports/api
           cp -r ./allure-report-e2e ./allure-report-with-index/allure-reports/e2e/${{ github.run_number }}
           cp -r ./allure-report-api ./allure-report-with-index/allure-reports/api/${{ github.run_number }}
-          
+
           cat > ./allure-report-with-index/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
@@ -538,23 +664,23 @@ jobs:
             echo "Required: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, EC2_HOST, EC2_SSH_KEY"
             exit 0
           fi
-          
+
           # Install AWS CLI if not present
           if ! command -v aws &> /dev/null; then
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
           fi
-          
+
           # Setup SSH key
           mkdir -p ~/.ssh
           echo "$EC2_SSH_KEY" > ~/.ssh/ec2_key.pem
           chmod 600 ~/.ssh/ec2_key.pem
-          
+
           # Deploy using deployment script
           chmod +x ./deployment/deploy.sh
           ./deployment/deploy.sh "$EC2_HOST" ~/.ssh/ec2_key.pem main
-          
+
           # Output deployment info
           echo "## 🚀 API Server Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

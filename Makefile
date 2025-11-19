@@ -1,4 +1,4 @@
-.PHONY: help setup test test-allure lint format docker-test clean allure-generate allure-serve allure-open
+.PHONY: help setup test test-allure test-accessibility test-wcag-basic test-wcag test-wcag-all test-wcag-modal accessibility-report lint format docker-test clean allure-generate allure-serve allure-open
 
 # Default target
 help: ## Show this help message
@@ -17,6 +17,24 @@ test-allure: ## Run tests with Allure reporter
 
 test-allure-html: ## Run tests and generate HTML report in one step
 	npm run test:allure && npm run allure:generate && npm run allure:open
+
+test-accessibility: ## Run all accessibility tests
+	npm run test:accessibility
+
+test-wcag-basic: ## Run basic WCAG 2.1 AA compliance test
+	npm run test:wcag:basic
+
+test-wcag: ## Run WCAG 2.1 Level A & AA compliance tests
+	npm run test:wcag
+
+test-wcag-all: ## Run complete WCAG 2.1/2.2 test suite (A, AA, AAA)
+	npm run test:wcag:all
+
+test-wcag-modal: ## Test modal dismissal functionality
+	npm run test:wcag:modal
+
+accessibility-report: ## Open accessibility test report
+	npx playwright show-report accessibility-report
 
 allure-generate: ## Generate Allure report
 	npm run allure:generate
@@ -42,5 +60,5 @@ docker-test-html: ## Run Docker tests and generate HTML Allure report
 	make docker-test && npm run allure:generate && npm run allure:open
 
 clean: ## Clean generated files and dependencies
-	rm -rf node_modules package-lock.json test-results/ playwright-report/ blob-report/ allure-results/ allure-report/
+	rm -rf node_modules package-lock.json test-results/ playwright-report/ blob-report/ allure-results/ allure-report/ accessibility-report/ accessibility-results.json accessibility-results.xml
 	npm install

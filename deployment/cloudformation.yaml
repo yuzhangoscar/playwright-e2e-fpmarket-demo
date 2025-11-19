@@ -5,7 +5,7 @@ Parameters:
   KeyPairName:
     Type: AWS::EC2::KeyPair::KeyName
     Description: Name of an existing EC2 KeyPair to enable SSH access
-    
+
   InstanceType:
     Type: String
     Default: t2.micro
@@ -17,19 +17,19 @@ Parameters:
       - t3.small
       - t3.medium
     Description: EC2 instance type
-    
+
   SSHLocation:
     Type: String
     Default: 0.0.0.0/0
     Description: IP address range for SSH access (use your IP for security)
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
     ConstraintDescription: Must be a valid IP CIDR range of the form x.x.x.x/x
-    
+
   GitRepository:
     Type: String
     Default: https://github.com/yuzhangoscar/playwright-e2e-fpmarket-demo.git
     Description: Git repository URL for the application
-    
+
   GitBranch:
     Type: String
     Default: main
@@ -98,7 +98,7 @@ Resources:
   PlaywrightAPIInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: ami-0c02fb55956c7d316  # Amazon Linux 2 AMI (update for your region)
+      ImageId: ami-0c02fb55956c7d316 # Amazon Linux 2 AMI (update for your region)
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyPairName
       SecurityGroupIds:
@@ -108,31 +108,31 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash
           yum update -y
-          
+
           # Install CloudWatch agent
           yum install -y amazon-cloudwatch-agent
-          
+
           # Install Node.js 18
           curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
           yum install -y nodejs git
-          
+
           # Install PM2 globally
           npm install -g pm2
-          
+
           # Create app user
           useradd -m -s /bin/bash appuser
-          
+
           # Clone repository
           cd /home/appuser
           git clone -b ${GitBranch} ${GitRepository} app
           chown -R appuser:appuser /home/appuser/app
-          
+
           # Switch to app user and setup application
           sudo -u appuser bash << 'EOF'
           cd /home/appuser/app
           npm install
           npm run api:build
-          
+
           # Create environment file
           cat > .env << 'ENVEOF'
           NODE_ENV=production
@@ -140,7 +140,7 @@ Resources:
           LOG_LEVEL=info
           CORS_ORIGIN=*
           ENVEOF
-          
+
           # Create PM2 ecosystem file
           cat > ecosystem.config.js << 'ECOEOF'
           module.exports = {
@@ -162,18 +162,18 @@ Resources:
             }]
           };
           ECOEOF
-          
+
           # Create logs directory
           mkdir -p logs
-          
+
           # Start application with PM2
           pm2 start ecosystem.config.js
           pm2 save
           EOF
-          
+
           # Setup PM2 startup for appuser
           sudo -u appuser pm2 startup | tail -n 1 | bash
-          
+
           # Install and configure CloudWatch agent (optional)
           cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWEOF'
           {
@@ -221,12 +221,12 @@ Resources:
             }
           }
           CWEOF
-          
+
           # Start CloudWatch agent
           /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
             -a fetch-config -m ec2 -s \
             -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-      
+
       Tags:
         - Key: Name
           Value: playwright-mock-api-server
