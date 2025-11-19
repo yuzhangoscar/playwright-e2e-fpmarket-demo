@@ -141,7 +141,7 @@ jobs:
 
       - name: Create Reports Index
         run: |
-          mkdir -p ./allure-report-with-index
+          mkdir -p ./allure-report-with-index/allure-reports
           cp -r ./allure-report ./allure-report-with-index/allure-reports/${{ github.run_number }}
           
           cat > ./allure-report-with-index/index.html << 'EOF'
