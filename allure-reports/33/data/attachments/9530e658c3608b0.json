@@ -1,0 +1,37 @@
+{
+  "Markets": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  },
+  "Trade": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  },
+  "Bots": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  },
+  "Yield": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  },
+  "Institutions & Partners": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  },
+  "VIP": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  },
+  "More": {
+    "exists": true,
+    "visible": true,
+    "enabled": true
+  }
+}

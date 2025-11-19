@@ -1,0 +1,2 @@
+Initial URL: https://crypto.com/exchange/trade/BTC_USD
+New URL: https://crypto.com/exchange/markets

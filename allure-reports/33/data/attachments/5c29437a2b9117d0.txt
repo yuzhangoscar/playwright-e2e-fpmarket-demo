@@ -1,0 +1,6 @@
+Testing hover for: Markets
+✓ Successfully hovered over: Markets
+Testing hover for: Trade
+✓ Successfully hovered over: Trade
+Testing hover for: Bots
+✓ Successfully hovered over: Bots

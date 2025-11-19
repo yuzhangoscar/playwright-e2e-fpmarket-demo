@@ -1,0 +1,21 @@
+Checking for navigation item: Markets
+Markets exists in DOM: true
+Markets - Visible: true, Enabled: true
+Checking for navigation item: Trade
+Trade exists in DOM: true
+Trade - Visible: true, Enabled: true
+Checking for navigation item: Bots
+Bots exists in DOM: true
+Bots - Visible: true, Enabled: true
+Checking for navigation item: Yield
+Yield exists in DOM: true
+Yield - Visible: true, Enabled: true
+Checking for navigation item: Institutions & Partners
+Institutions & Partners exists in DOM: true
+Institutions & Partners - Visible: true, Enabled: true
+Checking for navigation item: VIP
+VIP exists in DOM: true
+VIP - Visible: true, Enabled: true
+Checking for navigation item: More
+More exists in DOM: true
+More - Visible: true, Enabled: true
