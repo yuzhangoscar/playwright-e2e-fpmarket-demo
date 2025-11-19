@@ -1,13 +1,11 @@
 name: CI Pipeline
 
-# Trigger on push and PRs (adjust as needed)
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-# Grant permissions needed for GitHub Pages deployment
 permissions:
   contents: write
   pages: write
@@ -17,6 +15,7 @@ jobs:
   test:
     name: Test and generate Allure report
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,25 +36,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Prepare Allure directories
+      - name: Run tests and generate Allure results
         run: |
-          mkdir -p ./allure-results
-          mkdir -p ./allure-history
-
-      - name: Run tests (produce Allure results)
-        # Ensure your test runner writes results to ./allure-results.
-        # Adjust the command below to match your repository's test command if different.
-        run: |
-          # example: run Playwright tests; ensure they are configured to output to ./allure-results
           npx playwright install --with-deps
           npx playwright test || exit 0
-
-      - name: Upload raw Allure results (XML) as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-results-xml
-          path: ./allure-results
 
       - name: Set up Java for Allure CLI
         if: always()
@@ -90,13 +74,68 @@ jobs:
         run: |
           allure generate ./allure-results -o ./allure-report --clean
 
+      - name: Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-pr-${{ github.event.number }}
+          path: ./allure-report
+
+  deploy:
+    name: Deploy Allure report to GitHub Pages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and generate Allure results
+        run: |
+          npx playwright install --with-deps
+          npx playwright test || exit 0
+
+      - name: Set up Java for Allure CLI
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Allure CLI
+        uses: actions/cache@v4
+        id: allure-cache
+        with:
+          path: /opt/allure
+          key: allure-2.25.0
+
+      - name: Install Allure CLI
+        if: steps.allure-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -o allure-commandline.zip -Ls https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip
+          unzip -q allure-commandline.zip
+          sudo mv allure-2.25.0 /opt/allure
+
+      - name: Setup Allure CLI PATH
+        run: |
+          sudo ln -sf /opt/allure/bin/allure /usr/local/bin/allure
+          allure --version
+
+      - name: Generate Allure HTML report
+        run: |
+          allure generate ./allure-results -o ./allure-report --clean
+
       - name: Create Reports Index
-        if: always() && github.ref == 'refs/heads/main'
         run: |
           mkdir -p ./allure-report-with-index
           cp -r ./allure-report ./allure-report-with-index/allure-reports/${{ github.run_number }}
           
-          # Create main index.html
           cat > ./allure-report-with-index/index.html << 'EOF'
           <!DOCTYPE html>
           <html>
@@ -135,15 +174,7 @@ jobs:
           </html>
           EOF
 
-      - name: Upload Allure HTML artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: ./allure-report
-
       - name: Deploy Allure Report to GitHub Pages
-        if: always() && github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -151,7 +182,6 @@ jobs:
           keep_files: true
 
       - name: Output Allure Report URL
-        if: always() && github.ref == 'refs/heads/main'
         run: |
           echo "## 📊 Allure Report Published" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
