@@ -159,13 +159,19 @@ jobs:
           echo "Node.js version: $(node --version)"
           echo "Playwright version: $(npx playwright --version)"
 
-          # Show accessibility config
+          # Show accessibility config and test files
           echo "Accessibility configuration:"
           cat playwright.accessibility.config.ts | head -20
+          
+          echo "Checking for accessibility test files:"
+          ls -la tests/accessibility* || echo "No accessibility test files found"
+          
+          echo "Testing config with list command first:"
+          npm run test:accessibility -- --list || echo "Could not list tests"
 
-          # Run comprehensive accessibility test suite
-          echo "Running complete WCAG 2.1/2.2 accessibility test suite..."
-          npx playwright test --config=playwright.accessibility.config.ts --reporter=html,json,junit
+          # Run comprehensive accessibility test suite using npm script
+          echo "Running complete WCAG accessibility test suite..."
+          npm run test:accessibility
 
           # Store exit code but continue to generate reports
           ACCESSIBILITY_EXIT_CODE=$?
