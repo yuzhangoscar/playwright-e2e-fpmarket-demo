@@ -182,6 +182,10 @@ jobs:
           </html>
           EOF
 
+      - name: Create .nojekyll file
+        run: |
+          touch ./allure-report-with-index/.nojekyll
+
       - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
