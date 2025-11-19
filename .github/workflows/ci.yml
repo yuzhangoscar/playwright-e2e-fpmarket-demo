@@ -220,7 +220,7 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$EC2_HOST" ] || [ -z "$EC2_SSH_KEY" ]; then
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$EC2_HOST" ] || [ -z "$EC2_SSH_KEY" ]; then
             echo "⚠️ AWS deployment skipped: Missing required secrets"
             echo "Required: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, EC2_HOST, EC2_SSH_KEY"
             exit 0
