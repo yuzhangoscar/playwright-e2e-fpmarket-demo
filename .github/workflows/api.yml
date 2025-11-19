@@ -1,4 +1,4 @@
-name: API Tests
+name: API Tests via Docker
 
 on:
   pull_request:
@@ -10,25 +10,36 @@ permissions:
   contents: read
 
 jobs:
-  api-tests:
-    name: Jest API Tests
+  api-docker-tests:
+    name: Jest API Tests via Docker
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
+      - name: Setup environment for API tests
+        run: |
+          # Create directories for API test results
+          mkdir -p allure-results-api coverage-api
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Build API Docker image
+        run: |
+          echo "🐳 Building API Docker image..."
+          docker build -f docker/Dockerfile.api -t api-tests .
 
-      - name: Run Jest API tests
-        run: npm run api:test
+      - name: Run API tests in Docker
+        run: |
+          echo "🧪 Running API tests in Docker container..."
+          
+          # Run API tests with volume mounts for results
+          docker run --rm \
+            -v $(pwd)/allure-results-api:/app/allure-results-api \
+            -v $(pwd)/coverage-api:/app/coverage-api \
+            -e NODE_ENV=test \
+            -e CI=true \
+            -e API_PORT=3000 \
+            api-tests
 
       - name: Upload API test results
         if: always()
@@ -48,8 +59,12 @@ jobs:
           
           if [ -f "coverage-api/lcov.info" ]; then
             echo "### ✅ API Tests Completed" >> $GITHUB_STEP_SUMMARY
-            echo "Jest API tests have been executed successfully." >> $GITHUB_STEP_SUMMARY
+            echo "Jest API tests have been executed via Docker container." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Count test files
+            TEST_COUNT=$(find allure-results-api -name "*.json" 2>/dev/null | wc -l)
+            echo "- 📁 **Result Files Generated:** $TEST_COUNT" >> $GITHUB_STEP_SUMMARY
             
             # Check for test coverage
             if [ -d "coverage-api" ]; then
@@ -69,3 +84,8 @@ jobs:
           echo "Download the \`api-test-results-${{ github.event.number || github.run_number }}\` artifact to view:" >> $GITHUB_STEP_SUMMARY
           echo "- **Coverage Report:** Open \`coverage-api/index.html\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Allure Results:** For detailed API test reporting" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎭 Tests Executed" >> $GITHUB_STEP_SUMMARY
+          echo "- **API Server Tests:** Express.js server functionality and endpoints" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Node.js in Docker container" >> $GITHUB_STEP_SUMMARY
+          echo "- **Test Framework:** Jest with coverage and Allure reporting" >> $GITHUB_STEP_SUMMARY
