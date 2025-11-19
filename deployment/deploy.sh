@@ -85,7 +85,7 @@ run_remote "
     mkdir -p $REMOTE_DIR
     
     # If directory exists and has git, pull latest changes
-    if [ -d '$REMOTE_DIR/.git' ]; then
+    if [ -d \"$REMOTE_DIR/.git\" ]; then
         echo 'Updating existing repository...'
         cd $REMOTE_DIR
         git fetch origin
