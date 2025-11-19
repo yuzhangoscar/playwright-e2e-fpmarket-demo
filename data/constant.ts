@@ -1,4 +1,4 @@
-export const BASE_URL: string = 'https://crypto.com/exchange/trade/BTC_USD';
+export const BASE_URL: string = process.env.BASE_URL || 'https://crypto.com/exchange/trade/BTC_USD';
 
 // Main navigation menu items for crypto.com exchange
 export const NAV_BUTTONS_TEXT: string[] = [

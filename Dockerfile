@@ -16,6 +16,9 @@ RUN npm ci --ignore-scripts
 # Copy source code
 COPY . .
 
+# Copy environment example if no .env exists
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
 # Install Playwright browsers (they should already be in the base image)
 RUN npx playwright install --with-deps
 

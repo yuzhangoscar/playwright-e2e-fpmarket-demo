@@ -16,6 +16,7 @@
 | ------------------------------------ | -------- | -------------------------------- |
 | **@playwright/test**                 | ^1.48.0  | Modern web testing framework     |
 | **typescript**                       | ^5.9.3   | TypeScript language support      |
+| **dotenv**                           | ^17.2.3  | Environment variable management  |
 | **eslint**                           | ^8.57.1  | JavaScript/TypeScript linting    |
 | **@typescript-eslint/parser**        | ^8.47.0  | TypeScript parser for ESLint     |
 | **@typescript-eslint/eslint-plugin** | ^8.47.0  | TypeScript-specific ESLint rules |
@@ -98,6 +99,34 @@ Or run individual steps:
 
 ```bash
 make setup  # Complete setup: install dependencies and browsers
+```
+
+## 🔧 Configuration
+
+Create a `.env` file in the root directory with your test environment variables:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your configuration:
+
+```env
+# Base URL for the application
+BASE_URL=https://crypto.com/exchange/trade/BTC_USD
+
+# Test Configuration
+TEST_TIMEOUT=30000
+TEST_RETRIES=2
+HEADLESS=true
+
+# Browser Configuration
+DEFAULT_BROWSER=chromium
+VIEWPORT_WIDTH=1920
+VIEWPORT_HEIGHT=1080
+
+# Reporting
+REPORT_TITLE="Crypto.com E2E Test Results"
 ```
 
 ## 🔧 Available Commands
