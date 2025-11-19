@@ -1,0 +1,5 @@
+{
+  "uuid": "4d8e9e70-6982-56c7-ac1a-2b21a4ab5c9f",
+  "name": "API Server Tests Health Endpoints GET /api/health/detailed should return detailed health info (0)",
+  "children": ["fb12ad97-d7e1-456c-a606-f27f0784948a"]
+}

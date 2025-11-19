@@ -1,0 +1,20 @@
+{
+  "uuid": "f7e01c0d-767b-4613-815c-ede6c7334a64",
+  "historyId": "97987163700d97208fe4f137ca5609c3",
+  "name": "GET /api/blacklist should return all blacklisted entries",
+  "fullName": "API Server Tests Blacklist Endpoints GET /api/blacklist should return all blacklisted entries",
+  "start": 1763530647190,
+  "stop": 1763530647193,
+  "description": "",
+  "descriptionHtml": "",
+  "stage": "finished",
+  "status": "passed",
+  "labels": [
+    { "value": "API Server Tests", "name": "suite" },
+    { "value": "Blacklist Endpoints", "name": "subSuite" },
+    { "name": "thread", "value": "02" }
+  ],
+  "links": [],
+  "attachments": [],
+  "parameters": []
+}

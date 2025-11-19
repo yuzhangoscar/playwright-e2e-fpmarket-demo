@@ -1,0 +1,20 @@
+{
+  "uuid": "88519040-b8a6-4703-be2d-4c1d3577f5be",
+  "historyId": "4c25af8ae30eee0d03812d8aa4b4983e",
+  "name": "GET /api/health should return basic health info",
+  "fullName": "API Server Tests Health Endpoints GET /api/health should return basic health info",
+  "start": 1763530647175,
+  "stop": 1763530647187,
+  "description": "",
+  "descriptionHtml": "",
+  "stage": "finished",
+  "status": "passed",
+  "labels": [
+    { "value": "API Server Tests", "name": "suite" },
+    { "value": "Health Endpoints", "name": "subSuite" },
+    { "name": "thread", "value": "02" }
+  ],
+  "links": [],
+  "attachments": [],
+  "parameters": []
+}

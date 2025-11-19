@@ -1,0 +1,5 @@
+{
+  "uuid": "de3be4e3-55fb-5fff-8800-e04f66ed9977",
+  "name": "API Server Tests Blacklist Endpoints GET /api/blacklist/check/:name should check if name is blacklisted (0)",
+  "children": ["b38fc222-7995-4464-96ca-c5a1f5081ae6"]
+}

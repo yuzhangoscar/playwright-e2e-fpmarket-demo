@@ -151,8 +151,11 @@ jobs:
 
       - name: Run Jest API tests with Allure
         run: |
-          # Install Jest Allure reporter
+          # Install Jest Allure reporter  
           npm install --save-dev jest-allure2-reporter
+          
+          # Ensure allure-results-api directory exists
+          mkdir -p allure-results-api
           
           # Create Jest config for Allure reporting
           cat > jest.allure.config.js << 'EOF'
@@ -164,6 +167,7 @@ jobs:
             transform: {
               '^.+\\.ts$': 'ts-jest',
             },
+
             collectCoverageFrom: [
               'src/**/*.ts',
               '!src/**/*.d.ts',
@@ -190,8 +194,23 @@ jobs:
           };
           EOF
           
+          # Debug Jest setup
+          echo "Jest configuration:"
+          cat jest.allure.config.js
+          echo "Checking API test file:"
+          ls -la tests/api.test.ts || echo "API test file not found"
+          
           # Run Jest tests with Allure reporter
-          npx jest --config=jest.allure.config.js tests/api.test.ts || exit 0
+          echo "Running Jest API tests..."
+          npx jest --config=jest.allure.config.js tests/api.test.ts
+          TEST_EXIT_CODE=$?
+          echo "Jest completed with exit code: $TEST_EXIT_CODE"
+          
+          # Check if any results were generated
+          echo "Checking allure-results-api directory:"
+          ls -la allure-results-api/ || echo "No results directory"
+          echo "Result files count:"
+          find allure-results-api/ -type f | wc -l || echo "0"
 
       - name: Set up Java for Allure CLI
         if: always()
@@ -224,7 +243,37 @@ jobs:
       - name: Generate API Allure HTML report
         if: always()
         run: |
-          allure generate ./allure-results-api -o ./allure-report-api --clean
+          # Check if we have any Allure result files
+          RESULT_COUNT=$(find ./allure-results-api -name "*.json" -type f | wc -l || echo "0")
+          echo "Found $RESULT_COUNT Allure result files"
+          
+          if [ "$RESULT_COUNT" -gt 0 ]; then
+            echo "Generating Allure report from $RESULT_COUNT result files..."
+            allure generate ./allure-results-api -o ./allure-report-api --clean
+          else
+            echo "No Allure results found. Creating placeholder report..."
+            mkdir -p ./allure-report-api
+            cat > ./allure-report-api/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>API Test Results - No Tests Run</title>
+              <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+                  .warning { color: #ff6b6b; background: #fff5f5; padding: 20px; border-radius: 8px; }
+              </style>
+          </head>
+          <body>
+              <h1>API Test Results</h1>
+              <div class="warning">
+                  <h2>No API tests were executed</h2>
+                  <p>The Jest API tests did not run successfully or no test results were generated.</p>
+                  <p>Check the CI logs for more details about test execution failures.</p>
+              </div>
+          </body>
+          </html>
+          EOF
+          fi
 
       - name: Upload API Allure HTML report
         if: always()

@@ -1,0 +1,20 @@
+{
+  "uuid": "ca1782a1-180a-4950-abe3-d67fc6fad851",
+  "historyId": "108f184bac66065d80aa01c636f74d7d",
+  "name": "POST /api/blacklist should add new entry",
+  "fullName": "API Server Tests Blacklist Endpoints POST /api/blacklist should add new entry",
+  "start": 1763530647201,
+  "stop": 1763530647207,
+  "description": "",
+  "descriptionHtml": "",
+  "stage": "finished",
+  "status": "passed",
+  "labels": [
+    { "value": "API Server Tests", "name": "suite" },
+    { "value": "Blacklist Endpoints", "name": "subSuite" },
+    { "name": "thread", "value": "02" }
+  ],
+  "links": [],
+  "attachments": [],
+  "parameters": []
+}

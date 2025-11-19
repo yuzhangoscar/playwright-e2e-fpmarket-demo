@@ -1,0 +1,20 @@
+{
+  "uuid": "1b9875cd-7994-4fbb-b18c-5a176421d436",
+  "historyId": "7f482615d530c18009dd9685078ecb0c",
+  "name": "POST /api/blacklist should handle invalid data",
+  "fullName": "API Server Tests Blacklist Endpoints POST /api/blacklist should handle invalid data",
+  "start": 1763530647209,
+  "stop": 1763530647211,
+  "description": "",
+  "descriptionHtml": "",
+  "stage": "finished",
+  "status": "passed",
+  "labels": [
+    { "value": "API Server Tests", "name": "suite" },
+    { "value": "Blacklist Endpoints", "name": "subSuite" },
+    { "name": "thread", "value": "02" }
+  ],
+  "links": [],
+  "attachments": [],
+  "parameters": []
+}

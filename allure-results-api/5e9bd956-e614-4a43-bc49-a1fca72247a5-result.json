@@ -1,0 +1,20 @@
+{
+  "uuid": "5e9bd956-e614-4a43-bc49-a1fca72247a5",
+  "historyId": "e5e131c91b1dafedff42e5627f5eab34",
+  "name": "POST /api/blacklist should handle duplicate entries",
+  "fullName": "API Server Tests Blacklist Endpoints POST /api/blacklist should handle duplicate entries",
+  "start": 1763530647207,
+  "stop": 1763530647209,
+  "description": "",
+  "descriptionHtml": "",
+  "stage": "finished",
+  "status": "passed",
+  "labels": [
+    { "value": "API Server Tests", "name": "suite" },
+    { "value": "Blacklist Endpoints", "name": "subSuite" },
+    { "name": "thread", "value": "02" }
+  ],
+  "links": [],
+  "attachments": [],
+  "parameters": []
+}

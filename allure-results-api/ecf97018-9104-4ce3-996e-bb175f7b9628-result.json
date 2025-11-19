@@ -1,0 +1,20 @@
+{
+  "uuid": "ecf97018-9104-4ce3-996e-bb175f7b9628",
+  "historyId": "a50e75183b07c2175869834174826415",
+  "name": "DELETE /api/blacklist/:name should remove existing entry",
+  "fullName": "API Server Tests Blacklist Endpoints DELETE /api/blacklist/:name should remove existing entry",
+  "start": 1763530647212,
+  "stop": 1763530647214,
+  "description": "",
+  "descriptionHtml": "",
+  "stage": "finished",
+  "status": "passed",
+  "labels": [
+    { "value": "API Server Tests", "name": "suite" },
+    { "value": "Blacklist Endpoints", "name": "subSuite" },
+    { "name": "thread", "value": "02" }
+  ],
+  "links": [],
+  "attachments": [],
+  "parameters": []
+}
