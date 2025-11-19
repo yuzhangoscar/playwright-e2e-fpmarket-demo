@@ -1,6 +1,6 @@
-# Playwright E2E Tests for FPMarket Demo
+# Playwright E2E Tests for Crypto
 
-[![CI Pipeline](https://github.com/brucechang/playwright-e2e-fpmarket-demo/workflows/CI%20Pipeline/badge.svg)](https://github.com/brucechang/playwright-e2e-fpmarket-demo/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/brucechang/playwright-e2e-crypto/workflows/CI%20Pipeline/badge.svg)](https://github.com/brucechang/playwright-e2e-crypto/actions/workflows/ci.yml)
 [![Playwright Tests](https://img.shields.io/badge/playwright-^1.48.0-blue)](https://playwright.dev/)
 [![TypeScript](https://img.shields.io/badge/typescript-^5.9.3-blue)](https://www.typescriptlang.org/)
 [![ESLint](https://img.shields.io/badge/eslint-^8.57.1-purple)](https://eslint.org/)
@@ -35,15 +35,15 @@ A comprehensive E2E testing framework with Playwright, Allure reporting, and a m
 | **@types/node**                      | ^24.10.1 | Node.js type definitions         |
 | **ts-node**                          | ^10.9.2  | TypeScript execution engine      |
 
-This project contains end-to-end (E2E) tests for the FPMarket demo account using [Playwright](https://playwright.dev/), a modern web testing framework written in **TypeScript** with comprehensive linting and code quality tools.
+This project contains end-to-end (E2E) tests for crypto trading platforms using [Playwright](https://playwright.dev/), a modern web testing framework written in **TypeScript** with comprehensive linting and code quality tools.
 
 ## 📋 Overview
 
-This test suite is designed to validate the functionality and user experience of the FPMarket demo trading platform through automated browser testing. The tests simulate real user interactions to ensure the application works correctly across different browsers and scenarios.
+This test suite is designed to validate the functionality and user experience of crypto trading platforms through automated browser testing. The tests simulate real user interactions to ensure the application works correctly across different browsers and scenarios.
 
 ## 🎯 Purpose
 
-- **Quality Assurance**: Ensure FPMarket demo features work as expected
+- **Quality Assurance**: Ensure crypto trading features work as expected
 - **Regression Testing**: Catch breaking changes before they reach production
 - **Cross-Browser Testing**: Verify compatibility across Chrome, Firefox, and Safari
 - **User Journey Validation**: Test critical trading workflows and user paths
@@ -62,7 +62,7 @@ This test suite is designed to validate the functionality and user experience of
 ## 📁 Project Structure
 
 ```
-playwright-e2e-fpmarket-demo/
+playwright-e2e-crypto/
 ├── tests/                    # TypeScript test files
 │   ├── auth/                # Authentication tests
 │   ├── trading/             # Trading functionality tests
@@ -107,7 +107,7 @@ playwright-e2e-fpmarket-demo/
 
 ```bash
 git clone <repository-url>
-cd playwright-e2e-fpmarket-demo
+cd playwright-e2e-crypto
 ```
 
 2. Complete setup (install dependencies and browsers):
@@ -563,7 +563,7 @@ Use descriptive branch names:
 ## 📚 Resources
 
 - [Playwright Documentation](https://playwright.dev/docs/intro)
-- [FPMarket Demo Platform](https://demo.fpmarket.com)
+- [Crypto.com Exchange](https://crypto.com/exchange)
 - [Test Strategy Guidelines](./docs/test-strategy.md)
 - [Contributing Guide](./CONTRIBUTING.md)
 
