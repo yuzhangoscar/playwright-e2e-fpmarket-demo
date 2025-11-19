@@ -309,7 +309,8 @@ This command automatically:
 
 - Builds the Docker image with latest code
 - Runs all Playwright tests in the container
-- Saves test results and reports to local directories
+- Saves test results, Playwright reports, and **Allure results** to local directories
+- **Maintains consistency** with CI/CD environment (same volume mounts as GitHub Actions)
 
 #### Advanced Docker Usage
 
@@ -327,7 +328,7 @@ Then open http://localhost:9323 to view test reports.
 
 - **Base Image**: `mcr.microsoft.com/playwright:v1.48.0-focal` (matches npm package version)
 - **Optimized builds**: Efficient caching and minimal layers
-- **Volume mounting**: Test results and reports are persisted locally
+- **Volume mounting**: Test results, Playwright reports, and Allure results are persisted locally
 - **Environment consistency**: Same runtime as CI/CD pipeline
 - **🔒 Secure**: `.env` files excluded from Docker images (see `.dockerignore`)
 

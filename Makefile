@@ -33,7 +33,7 @@ format: ## Format code with Prettier
 
 docker-test: ## Run tests in Docker container
 	docker build -t playwright-e2e-tests .
-	docker run --rm -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report playwright-e2e-tests
+	docker run --rm -v $(PWD)/test-results:/app/test-results -v $(PWD)/playwright-report:/app/playwright-report -v $(PWD)/allure-results:/app/allure-results playwright-e2e-tests
 
 clean: ## Clean generated files and dependencies
 	rm -rf node_modules package-lock.json test-results/ playwright-report/ blob-report/
