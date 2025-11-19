@@ -37,8 +37,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Prepare Allure results dir
-        run: mkdir -p ./allure-results
+      - name: Prepare Allure directories
+        run: |
+          mkdir -p ./allure-results
+          mkdir -p ./allure-history
 
       - name: Run tests (produce Allure results)
         # Ensure your test runner writes results to ./allure-results.
@@ -55,18 +57,14 @@ jobs:
           name: allure-results-xml
           path: ./allure-results
 
-      - name: Set up Java (required by Allure CLI)
-        if: always()
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '11'
-
       - name: Generate Allure HTML report
         if: always()
-        run: |
-          # Use npx to run allure-commandline without committing it
-          npx -p allure-commandline@2.13.9 allure generate ./allure-results -o ./allure-report --clean
+        uses: simple-elf/allure-report-action@v1.7
+        with:
+          allure_results: ./allure-results
+          allure_report: ./allure-report
+          gh_pages: false
+          allure_history: allure-history
 
       - name: Upload Allure HTML artifact
         if: always()
