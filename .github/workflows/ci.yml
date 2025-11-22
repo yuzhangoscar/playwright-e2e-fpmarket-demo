@@ -53,15 +53,15 @@ jobs:
           echo "🧪 Running E2E tests in Docker container..."
 
           # Create directories for test results
-          mkdir -p test-results playwright-report allure-results
+          mkdir -p test-results playwright-report allure-results allure-report
 
           # Set test command based on tag input
           if [ -n "${{ github.event.inputs.tag }}" ]; then
             echo "🏷️ Running tests with tag filter: ${{ github.event.inputs.tag }}"
-            TEST_CMD="npm test -- --grep \"${{ github.event.inputs.tag }}\""
+            TEST_CMD="npm run test:allure -- --grep \"${{ github.event.inputs.tag }}\" && npm run allure:generate"
           else
             echo "🎭 Running all E2E tests"
-            TEST_CMD="npm test"
+            TEST_CMD="npm run test:allure && npm run allure:generate"
           fi
 
           # Run E2E tests with volume mounts for results
@@ -69,6 +69,7 @@ jobs:
             -v $(pwd)/test-results:/app/test-results \
             -v $(pwd)/playwright-report:/app/playwright-report \
             -v $(pwd)/allure-results:/app/allure-results \
+            -v $(pwd)/allure-report:/app/allure-report \
             -e CI=true \
             -e BASE_URL=https://crypto.com/exchange/trade/BTC_USD \
             -e TEST_TIMEOUT=30000 \
@@ -85,10 +86,11 @@ jobs:
             test-results/
             playwright-report/
             allure-results/
+            allure-report/
           retention-days: 7
 
       - name: Deploy to GitHub Pages
-        if: always()
+        if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
