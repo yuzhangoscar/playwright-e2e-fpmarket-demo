@@ -76,7 +76,7 @@ services:
     networks:
       - test-network
 
-  # API Allure Report Server  
+  # API Allure Report Server
   api-allure-server:
     image: nginx:alpine
     volumes:

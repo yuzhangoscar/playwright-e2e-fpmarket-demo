@@ -31,7 +31,7 @@ jobs:
       - name: Run API tests in Docker
         run: |
           echo "🧪 Running API tests in Docker container..."
-          
+
           # Run API tests with volume mounts for results
           docker run --rm \
             -v $(pwd)/allure-results-api:/app/allure-results-api \
@@ -56,7 +56,7 @@ jobs:
         run: |
           echo "## 🚀 API Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f "coverage-api/lcov.info" ]; then
             echo "### ✅ API Tests Completed" >> $GITHUB_STEP_SUMMARY
             echo "Jest API tests have been executed via Docker container." >> $GITHUB_STEP_SUMMARY
@@ -78,7 +78,7 @@ jobs:
             echo "### ⚠️ API Test Issues Detected" >> $GITHUB_STEP_SUMMARY
             echo "API tests may have failed or not generated expected outputs." >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
           echo "Download the \`api-test-results-${{ github.event.number || github.run_number }}\` artifact to view:" >> $GITHUB_STEP_SUMMARY

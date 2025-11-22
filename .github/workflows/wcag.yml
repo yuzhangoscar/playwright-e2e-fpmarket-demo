@@ -31,7 +31,7 @@ jobs:
       - name: Run WCAG tests in Docker
         run: |
           echo "♿ Running WCAG accessibility tests in Docker container..."
-          
+
           # Run WCAG tests with volume mounts for results
           docker run --rm \
             -v $(pwd)/test-results-wcag:/app/test-results \
@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "## ♿ WCAG Accessibility Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -d "test-results-wcag" ] && [ "$(ls -A test-results-wcag 2>/dev/null)" ]; then
             echo "### ✅ WCAG Tests Completed" >> $GITHUB_STEP_SUMMARY
             echo "WCAG accessibility tests have been executed via Docker container." >> $GITHUB_STEP_SUMMARY
@@ -88,7 +88,7 @@ jobs:
             echo "WCAG tests may have timed out (2min limit) or failed to generate results." >> $GITHUB_STEP_SUMMARY
             echo "Consider running locally with \`make test-accessibility\` for detailed analysis." >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
           echo "Download the \`wcag-test-results-${{ github.event.number || github.run_number }}\` artifact to view:" >> $GITHUB_STEP_SUMMARY

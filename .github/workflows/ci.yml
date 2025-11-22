@@ -42,10 +42,10 @@ jobs:
       - name: Run E2E tests in Docker
         run: |
           echo "🧪 Running E2E tests in Docker container..."
-          
+
           # Create directories for test results
           mkdir -p test-results playwright-report allure-results
-          
+
           # Set test command based on tag input
           if [ -n "${{ github.event.inputs.tag }}" ]; then
             echo "🏷️ Running tests with tag filter: ${{ github.event.inputs.tag }}"
@@ -54,7 +54,7 @@ jobs:
             echo "🎭 Running all E2E tests"
             TEST_CMD="npm test"
           fi
-          
+
           # Run E2E tests with volume mounts for results
           docker run --rm \
             -v $(pwd)/test-results:/app/test-results \
@@ -83,14 +83,14 @@ jobs:
         run: |
           echo "## 🧪 E2E Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Show tag information if provided
           if [ -n "${{ github.event.inputs.tag }}" ]; then
             echo "### 🏷️ Tag Filter Applied" >> $GITHUB_STEP_SUMMARY
             echo "**Filter:** \`${{ github.event.inputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           # Check if test results exist
           if [ -d "test-results" ] && [ "$(ls -A test-results)" ]; then
             echo "### ✅ Test Execution Completed" >> $GITHUB_STEP_SUMMARY
@@ -112,7 +112,7 @@ jobs:
             echo "### ⚠️ No Test Results Found" >> $GITHUB_STEP_SUMMARY
             echo "Tests may have failed to run or generate results." >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Reports Available" >> $GITHUB_STEP_SUMMARY
           ARTIFACT_NAME="${{ github.event.inputs.tag && format('e2e-test-results-{0}-{1}', github.event.inputs.tag, github.run_number) || format('e2e-test-results-pr-{0}', github.event.number || github.run_number) }}"
