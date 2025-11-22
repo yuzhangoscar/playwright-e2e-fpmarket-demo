@@ -11,6 +11,15 @@ on:
         required: false
         default: ''
         type: string
+      env:
+        description: 'choose ENV, it could be dev, staging or prod'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
 
 permissions:
   contents: read
