@@ -16,7 +16,7 @@ async function globalSetup(config: FullConfig) {
     console.log('✅ Target application is accessible');
 
     // Wait for initial load and check for modals
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState('load');
 
     // Check for modals that might interfere with accessibility testing
     const modalSelectors = [

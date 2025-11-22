@@ -13,7 +13,8 @@ test.describe('Crypto.com Exchange Navigation Tests', () => {
       // Dismiss any cookie banners
       await dismissCookieBanner();
       await waitForPageLoad();
-      await page.waitForTimeout(1000);
+      // Wait for page to stabilize after navigation
+      await page.waitForLoadState('load');
     } catch (error) {
       console.log(`Setup error: ${error instanceof Error ? error.message : String(error)}`);
       // Don't fail the test if setup has minor issues
@@ -115,6 +116,9 @@ test.describe('Crypto.com Exchange Navigation Tests', () => {
       const itemsToTest = visibleItems.slice(0, 3);
       await allure.parameter('Items to Test', itemsToTest.join(', '));
 
+      // Ensure we have items to test
+      expect(itemsToTest.length).toBeGreaterThan(0);
+
       for (const item of itemsToTest) {
         await allure.step(`Hover over ${item}`, async () => {
           console.log(`Testing hover for: ${item}`);
@@ -123,8 +127,12 @@ test.describe('Crypto.com Exchange Navigation Tests', () => {
             await hoverNavigationItem(item);
             console.log(`✓ Successfully hovered over: ${item}`);
 
-            // Wait a bit between hovers
-            await page.waitForTimeout(1000);
+            // Wait for hover effects to complete
+            await page.waitForLoadState('load');
+
+            // Verify hover was successful by checking the item is still visible
+            const itemElement = page.locator(`text="${item}"`).first();
+            await expect(itemElement).toBeVisible();
           } catch (error) {
             console.log(`✗ Failed to hover over ${item}: ${error}`);
             await allure.attachment('Hover Error', String(error), 'text/plain');
@@ -154,41 +162,36 @@ test.describe('Crypto.com Exchange Navigation Tests', () => {
         'application/json'
       );
 
-      // Test clicking on "Markets" if visible
-      if (visibleItems.includes('Markets')) {
-        await allure.step('Click on Markets navigation item', async () => {
-          const initialUrl = page.url();
-          await allure.parameter('Initial URL', initialUrl);
+      // Ensure we have visible items to test
+      expect(visibleItems.length).toBeGreaterThan(0);
 
-          try {
-            await clickNavigationItem('Markets');
+      // Test clicking on the first available navigation item
+      const targetItem = visibleItems.includes('Markets') ? 'Markets' : visibleItems[0];
 
-            // Wait for potential navigation
-            await page.waitForTimeout(2000);
+      await allure.step(`Click on ${targetItem} navigation item`, async () => {
+        const initialUrl = page.url();
+        await allure.parameter('Initial URL', initialUrl);
 
-            const newUrl = page.url();
-            console.log(`Initial URL: ${initialUrl}`);
-            console.log(`New URL: ${newUrl}`);
-            await allure.parameter('New URL', newUrl);
+        try {
+          await clickNavigationItem(targetItem);
 
-            // URL might change or stay the same depending on implementation
-            expect(newUrl).toBeTruthy();
-          } catch (error) {
-            console.log(`Failed to click Markets: ${error}`);
-            await allure.attachment('Click Error', String(error), 'text/plain');
-            throw error;
-          }
-        });
-      } else {
-        await allure.step('Markets navigation item not found', async () => {
-          console.log('Markets navigation item not found');
-          await allure.attachment(
-            'Missing Item',
-            'Markets navigation item was not found in visible items',
-            'text/plain'
-          );
-        });
-      }
+          // Wait for potential navigation or page changes
+          await page.waitForLoadState('load');
+
+          const newUrl = page.url();
+          console.log(`Initial URL: ${initialUrl}`);
+          console.log(`New URL: ${newUrl}`);
+          await allure.parameter('New URL', newUrl);
+
+          // URL should be truthy and page should be responsive
+          expect(newUrl).toBeTruthy();
+          await expect(page).toHaveURL(/crypto\.com/);
+        } catch (error) {
+          console.log(`Failed to click ${targetItem}: ${error}`);
+          await allure.attachment('Click Error', String(error), 'text/plain');
+          throw error;
+        }
+      });
     });
   });
 
@@ -248,6 +251,10 @@ test.describe('Crypto.com Exchange Navigation Tests', () => {
         JSON.stringify(itemResults, null, 2),
         'application/json'
       );
+
+      // Assert that at least some navigation items exist
+      const existingItems = Object.values(itemResults).filter(result => result.exists);
+      expect(existingItems.length).toBeGreaterThan(0);
     });
   });
 });

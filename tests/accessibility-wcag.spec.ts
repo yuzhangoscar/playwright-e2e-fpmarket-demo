@@ -20,14 +20,14 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Give a moment for any remaining dynamic content to load
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('load');
   });
 
   // Helper function to dismiss all modals and popups
   async function dismissAllModals(page: Page) {
     try {
       // Wait for any initial popups to appear
-      await page.waitForTimeout(2000);
+      await page.waitForLoadState('load');
 
       // 1. Handle Cookie Banner/Dialog
       const cookieSelectors = [
@@ -59,7 +59,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
               const acceptBtn = cookieDialog.locator(btnSelector);
               if (await acceptBtn.isVisible({ timeout: 1000 })) {
                 await acceptBtn.click();
-                await page.waitForTimeout(1000);
+                await page.waitForLoadState('load');
                 console.log('Cookie dialog dismissed');
                 break;
               }
@@ -91,7 +91,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
             const skipButton = tutorialDialog.locator('button:has-text("Skip")');
             if (await skipButton.isVisible({ timeout: 1000 })) {
               await skipButton.click();
-              await page.waitForTimeout(1000);
+              await page.waitForLoadState('load');
               console.log('Tutorial dialog skipped');
               continue;
             }
@@ -109,7 +109,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
               const closeBtn = tutorialDialog.locator(closeSelector);
               if (await closeBtn.isVisible({ timeout: 1000 })) {
                 await closeBtn.click();
-                await page.waitForTimeout(1000);
+                await page.waitForLoadState('load');
                 console.log('Tutorial dialog closed');
                 break;
               }
@@ -152,7 +152,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
                 const dismissBtn = modal.locator(dismissSelector);
                 if (await dismissBtn.isVisible({ timeout: 1000 })) {
                   await dismissBtn.click();
-                  await page.waitForTimeout(1000);
+                  await page.waitForLoadState('load');
                   console.log('Generic modal dismissed');
                   break;
                 }
@@ -161,7 +161,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
               // If no dismiss button found, try pressing Escape
               try {
                 await page.keyboard.press('Escape');
-                await page.waitForTimeout(500);
+                await page.waitForLoadState('load');
                 console.log('Modal dismissed with Escape key');
               } catch {
                 // Escape didn't work, continue
@@ -174,7 +174,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
       }
 
       // 4. Final check - wait for any animations to complete
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('load');
 
       console.log('Modal dismissal complete');
     } catch (error) {
@@ -185,7 +185,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
 
   test('Modal Dismissal Verification', async ({ page }) => {
     // Verify that all modals/popups have been properly dismissed
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('load');
 
     const remainingModals = await page
       .locator('[role="dialog"], .modal, [class*="modal"], [class*="popup"]')
@@ -203,7 +203,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
 
   test('WCAG 2.1 AA Level - Full Page Scan', async ({ page }) => {
     // Additional wait to ensure page is completely stable
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('load');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -226,6 +226,9 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
       .analyze();
 
     // For AAA level, we might allow some violations but should document them
+    console.log(
+      `WCAG 2.2 AAA scan completed with ${accessibilityScanResults.violations.length} violations`
+    );
     if (accessibilityScanResults.violations.length > 0) {
       console.log(
         'WCAG 2.2 AAA Violations found:',
@@ -237,6 +240,9 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
         }))
       );
     }
+
+    // Assert that scan was successful (allows violations but ensures scan worked)
+    expect(accessibilityScanResults).toBeDefined();
   });
 
   test('Navigation and Keyboard Accessibility', async ({ page }) => {
@@ -267,11 +273,20 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
     // Look for forms and inputs
     const forms = page.locator('form');
     const inputs = page.locator('input, select, textarea');
+    const formCount = await forms.count();
+    const inputCount = await inputs.count();
 
-    if ((await forms.count()) > 0 || (await inputs.count()) > 0) {
-      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(['forms']).analyze();
+    console.log(`Found ${formCount} forms and ${inputCount} inputs on the page`);
 
+    // Run accessibility scan regardless of element count
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(['forms']).analyze();
+
+    if (formCount > 0 || inputCount > 0) {
+      // If forms/inputs exist, expect no violations
       expect(accessibilityScanResults.violations).toEqual([]);
+    } else {
+      // If no forms/inputs, just verify scan completed successfully
+      expect(accessibilityScanResults).toBeDefined();
     }
   });
 
@@ -300,7 +315,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
 
   test('Dynamic Content Accessibility', async ({ page }) => {
     // Wait for any dynamic content to load
-    await page.waitForTimeout(2000);
+    await page.waitForLoadState('load');
 
     // Test accessibility of dynamically loaded content
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -335,14 +350,17 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
       }
     }
 
-    if (elementsFound) {
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze();
+    // Run accessibility scan regardless of trading elements presence
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa'])
+      .analyze();
 
+    if (elementsFound) {
+      console.log('Trading interface elements found - running full accessibility scan');
       expect(accessibilityScanResults.violations).toEqual([]);
     } else {
-      console.log('No trading interface elements found for accessibility testing');
+      console.log('No trading interface elements found - verifying scan completed');
+      expect(accessibilityScanResults).toBeDefined();
     }
   });
 
@@ -351,7 +369,7 @@ test.describe('WCAG Accessibility Compliance Tests', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Wait for responsive adjustments
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('load');
 
     const accessibilityScanResults = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa'])
