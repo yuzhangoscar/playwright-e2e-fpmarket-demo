@@ -137,13 +137,26 @@ jobs:
             for dir in accessibility-report test-results; do
               if [ -d "$dir" ]; then
                 for png_file in $(find "$dir" -name "*.png" -type f 2>/dev/null); do
-                  # Copy PNG to wcag directory and add to manifest
-                  relative_path=$(echo "$png_file" | sed 's|^[^/]*/||')
-                  cp "$png_file" "combined-reports/wcag/$relative_path" 2>/dev/null || true
-                  if [ -n "$SCREENSHOT_FILES" ]; then
-                    SCREENSHOT_FILES="$SCREENSHOT_FILES,"
+                  # Preserve directory structure to avoid filename collisions
+                  # Instead of stripping first directory, use full relative path with source prefix
+                  source_prefix=$(basename "$dir")
+                  relative_path_in_source=$(echo "$png_file" | sed "s|^$dir/||")
+                  final_path="$source_prefix/$relative_path_in_source"
+                  
+                  # Create parent directories before copying
+                  target_dir="combined-reports/wcag/$(dirname "$final_path")"
+                  mkdir -p "$target_dir"
+                  
+                  # Copy PNG to wcag directory with preserved structure
+                  if cp "$png_file" "combined-reports/wcag/$final_path" 2>/dev/null; then
+                    echo "✅ Copied: $png_file -> $final_path"
+                    if [ -n "$SCREENSHOT_FILES" ]; then
+                      SCREENSHOT_FILES="$SCREENSHOT_FILES,"
+                    fi
+                    SCREENSHOT_FILES="$SCREENSHOT_FILES    \"./$final_path\""
+                  else
+                    echo "❌ Failed to copy: $png_file"
                   fi
-                  SCREENSHOT_FILES="$SCREENSHOT_FILES    \"./$relative_path\""
                 done
               fi
             done
