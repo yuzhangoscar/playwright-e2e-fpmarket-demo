@@ -23,7 +23,7 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -92,7 +92,7 @@ jobs:
         run: |
           echo "## 🚀 Allure Report Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ "${{ steps.deployment.outcome }}" == "success" ]; then
             echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
             echo "Allure report has been successfully deployed to GitHub Pages!" >> $GITHUB_STEP_SUMMARY
@@ -109,7 +109,7 @@ jobs:
             echo "There was an issue deploying the Allure report to GitHub Pages." >> $GITHUB_STEP_SUMMARY
             echo "Check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🔄 Triggered By" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" == "push" ]; then

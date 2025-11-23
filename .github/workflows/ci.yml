@@ -88,5 +88,3 @@ jobs:
             allure-results/
             allure-report/
           retention-days: 7
-
-
