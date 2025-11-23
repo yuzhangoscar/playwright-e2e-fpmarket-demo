@@ -22,7 +22,7 @@
     "test:allure:html": "npm run test:allure && npm run allure:generate && npm run allure:open",
     "test:accessibility": "playwright test --config=playwright.accessibility.config.ts",
     "test:wcag": "playwright test --config=playwright.accessibility.config.ts --headed",
-    "test:wcag:report": "playwright test --config=playwright.accessibility.config.ts --reporter=html",
+    "test:wcag:report": "playwright test --config=playwright.accessibility.config.ts",
     "test:wcag:mobile": "playwright test --config=playwright.accessibility.config.ts --project=accessibility-mobile-chrome",
     "test:wcag:all": "playwright test --config=playwright.accessibility.config.ts --project=accessibility-chromium --project=accessibility-firefox --project=accessibility-webkit",
     "test:wcag:modal": "playwright test --config=playwright.accessibility.config.ts --grep=\"Modal Dismissal Verification\"",

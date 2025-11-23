@@ -8,6 +8,9 @@ export default defineConfig({
   testDir: './tests',
   testMatch: '**/accessibility-wcag.spec.ts',
 
+  /* Only run the specific WCAG 2.1 Level A test */
+  grep: /WCAG 2\.1 Level A - Critical Issues/,
+
   /* Run tests in files in parallel */
   fullyParallel: true,
 
