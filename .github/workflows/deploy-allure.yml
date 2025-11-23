@@ -1,0 +1,121 @@
+name: Deploy Allure Reports to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'choose ENV, it could be dev, staging or prod'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  generate-and-deploy-allure:
+    name: Generate and Deploy Allure Reports
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment for E2E tests
+        run: |
+          # Create directories for test results and reports
+          mkdir -p test-results playwright-report allure-results allure-report
+
+      - name: Build E2E Docker image
+        run: |
+          echo "🐳 Building E2E Docker image..."
+          docker build -f Dockerfile -t e2e-tests .
+
+      - name: Run E2E tests in Docker for Allure report
+        run: |
+          echo "🎭 Running E2E tests in Docker container to generate Allure reports..."
+
+          # Run E2E tests with volume mounts for all results and reports
+          docker run --rm \
+            -v $(pwd)/test-results:/app/test-results \
+            -v $(pwd)/playwright-report:/app/playwright-report \
+            -v $(pwd)/allure-results:/app/allure-results \
+            -v $(pwd)/allure-report:/app/allure-report \
+            -e CI=true \
+            -e BASE_URL=https://crypto.com/exchange/trade/BTC_USD \
+            -e TEST_TIMEOUT=60000 \
+            -e HEADLESS=true \
+            e2e-tests \
+            npm run test:allure && npm run allure:generate
+
+      - name: Verify Allure report generation
+        run: |
+          echo "📊 Verifying Allure report was generated..."
+          ls -la allure-report/
+          if [ ! -f "allure-report/index.html" ]; then
+            echo "❌ Allure report index.html not found!"
+            exit 1
+          fi
+          echo "✅ Allure report generated successfully"
+
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Allure report to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./allure-report
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Generate deployment summary
+        if: always()
+        run: |
+          echo "## 🚀 Allure Report Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.deployment.outcome }}" == "success" ]; then
+            echo "### ✅ Deployment Successful" >> $GITHUB_STEP_SUMMARY
+            echo "Allure report has been successfully deployed to GitHub Pages!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**🌐 Live Report URL:** ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Report Contents" >> $GITHUB_STEP_SUMMARY
+            echo "- **Test Execution Summary:** Overall test results and statistics" >> $GITHUB_STEP_SUMMARY
+            echo "- **Test Case Details:** Individual test results with screenshots and videos" >> $GITHUB_STEP_SUMMARY
+            echo "- **Trends:** Historical test execution trends (if available)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Categories:** Test failures grouped by categories and reasons" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "There was an issue deploying the Allure report to GitHub Pages." >> $GITHUB_STEP_SUMMARY
+            echo "Check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 Triggered By" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "- **Event:** Push to main branch" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Event:** Manual workflow dispatch" >> $GITHUB_STEP_SUMMARY
+            echo "- **Environment:** ${{ github.event.inputs.env || 'dev' }}" >> $GITHUB_STEP_SUMMARY
+          fi
