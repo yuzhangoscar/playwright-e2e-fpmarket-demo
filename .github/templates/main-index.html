@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playwright Test Reports - crypto.com Exchange</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 3rem;
+        color: white;
+      }
+      .header h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+      }
+      .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+      }
+      .report-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+      .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+      }
+      .report-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .report-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #333;
+      }
+      .report-description {
+        color: #666;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+      }
+      .report-button {
+        display: inline-block;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+      .report-button:hover {
+        background: linear-gradient(45deg, #764ba2, #667eea);
+        transform: scale(1.05);
+      }
+      .meta-info {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-top: 2rem;
+        color: white;
+        text-align: center;
+      }
+      .badge {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin: 0 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎭 Playwright Test Reports</h1>
+        <p>Comprehensive testing results for crypto.com Exchange platform</p>
+      </div>
+
+      <div class="reports-grid">
+        <div class="report-card">
+          <div class="report-icon">📊</div>
+          <h2 class="report-title">Allure Test Report</h2>
+          <p class="report-description">
+            Comprehensive E2E test results with detailed execution history, trends, and interactive
+            test case breakdowns. Includes screenshots, videos, and step-by-step test execution
+            details.
+          </p>
+          <a href="./allure/" class="report-button">View Allure Report →</a>
+        </div>
+
+        <div class="report-card">
+          <div class="report-icon">♿</div>
+          <h2 class="report-title">WCAG Accessibility Report</h2>
+          <p class="report-description">
+            WCAG 2.1 AA/AAA compliance testing results with detailed accessibility violations,
+            recommendations, and visual evidence of issues found during automated accessibility
+            scanning.
+          </p>
+          <a href="./wcag/" class="report-button">View WCAG Report →</a>
+        </div>
+      </div>
+
+      <div class="meta-info">
+        <p><strong>Generated:</strong> <span id="timestamp"></span></p>
+        <p><strong>Environment:</strong> <span class="badge">ENVIRONMENT_PLACEHOLDER</span></p>
+        <p><strong>Commit:</strong> <span class="badge">COMMIT_PLACEHOLDER</span></p>
+        <p><strong>Workflow:</strong> <span class="badge">WORKFLOW_PLACEHOLDER</span></p>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+  </body>
+</html>
