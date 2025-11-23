@@ -1,218 +1,230 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WCAG Accessibility Report - Visual Evidence</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 2rem;
-            color: #333;
-        }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .header { 
-            text-align: center; 
-            margin-bottom: 3rem; 
-            background: rgba(255,255,255,0.95);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .header h1 { 
-            font-size: 2.5rem; 
-            margin-bottom: 1rem; 
-            color: #667eea;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-        }
-        .header p { font-size: 1.1rem; color: #666; }
-        .navigation {
-            background: rgba(255,255,255,0.95);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .nav-button {
-            display: inline-block;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            margin: 0 10px;
-            transition: all 0.3s ease;
-        }
-        .nav-button:hover {
-            background: linear-gradient(45deg, #764ba2, #667eea);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .section {
-            background: rgba(255,255,255,0.95);
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .section h2 {
-            color: #667eea;
-            margin-bottom: 1rem;
-            font-size: 1.8rem;
-        }
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        .image-card {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .image-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .image-card img {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-            border-bottom: 2px solid #eee;
-        }
-        .image-info {
-            padding: 1rem;
-        }
-        .image-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-        .image-path {
-            font-size: 0.9rem;
-            color: #666;
-            font-family: monospace;
-            background: #f5f5f5;
-            padding: 0.5rem;
-            border-radius: 5px;
-        }
-        .no-images {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-            font-style: italic;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-        .stat-label {
-            color: #666;
-            margin-top: 0.5rem;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem;
+        color: #333;
+      }
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 3rem;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #667eea;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+      .header p {
+        font-size: 1.1rem;
+        color: #666;
+      }
+      .navigation {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+      .nav-button {
+        display: inline-block;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin: 0 10px;
+        transition: all 0.3s ease;
+      }
+      .nav-button:hover {
+        background: linear-gradient(45deg, #764ba2, #667eea);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+      .section {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+      .section h2 {
+        color: #667eea;
+        margin-bottom: 1rem;
+        font-size: 1.8rem;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+      .image-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+      }
+      .image-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
+      .image-card img {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-bottom: 2px solid #eee;
+      }
+      .image-info {
+        padding: 1rem;
+      }
+      .image-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+      }
+      .image-path {
+        font-size: 0.9rem;
+        color: #666;
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 0.5rem;
+        border-radius: 5px;
+      }
+      .no-images {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+        font-style: italic;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      }
+      .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+      }
+      .stat-label {
+        color: #666;
+        margin-top: 0.5rem;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>♿ WCAG Accessibility Report</h1>
-            <p>Visual evidence and screenshots from accessibility testing</p>
+      <div class="header">
+        <h1>♿ WCAG Accessibility Report</h1>
+        <p>Visual evidence and screenshots from accessibility testing</p>
+      </div>
+
+      <div class="navigation">
+        <a href="../" class="nav-button">← Back to Main Reports</a>
+        <a href="./data/" class="nav-button" id="original-report">📋 Original WCAG Report</a>
+      </div>
+
+      <div class="section">
+        <div class="stats" id="stats">
+          <div class="stat-card">
+            <div class="stat-number" id="total-images">0</div>
+            <div class="stat-label">Screenshots Found</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="test-evidence">📸</div>
+            <div class="stat-label">Visual Evidence</div>
+          </div>
         </div>
-        
-        <div class="navigation">
-            <a href="../" class="nav-button">← Back to Main Reports</a>
-            <a href="./data/" class="nav-button" id="original-report">📋 Original WCAG Report</a>
+      </div>
+
+      <div class="section">
+        <h2>📸 Visual Test Evidence</h2>
+        <p>Screenshots and visual evidence captured during WCAG accessibility testing:</p>
+
+        <div class="gallery" id="image-gallery">
+          <div class="no-images">
+            <h3>🔍 Scanning for images...</h3>
+            <p>Looking for PNG files in the accessibility test results...</p>
+          </div>
         </div>
-        
-        <div class="section">
-            <div class="stats" id="stats">
-                <div class="stat-card">
-                    <div class="stat-number" id="total-images">0</div>
-                    <div class="stat-label">Screenshots Found</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="test-evidence">📸</div>
-                    <div class="stat-label">Visual Evidence</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <h2>📸 Visual Test Evidence</h2>
-            <p>Screenshots and visual evidence captured during WCAG accessibility testing:</p>
-            
-            <div class="gallery" id="image-gallery">
-                <div class="no-images">
-                    <h3>🔍 Scanning for images...</h3>
-                    <p>Looking for PNG files in the accessibility test results...</p>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-    
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            loadImages();
-            
-            // Check if original report exists
-            fetch('./data/index.html')
-                .then(response => {
-                    if (!response.ok) {
-                        document.getElementById('original-report').style.display = 'none';
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('original-report').style.display = 'none';
-                });
-        });
-        
-        async function loadImages() {
-            const gallery = document.getElementById('image-gallery');
-            const totalImagesEl = document.getElementById('total-images');
-            
-            try {
-                // Try to fetch the data directory listing (if available)
-                const images = await findPngFiles();
-                
-                if (images.length === 0) {
-                    gallery.innerHTML = `
+      document.addEventListener('DOMContentLoaded', function () {
+        loadImages();
+
+        // Check if original report exists
+        fetch('./data/index.html')
+          .then(response => {
+            if (!response.ok) {
+              document.getElementById('original-report').style.display = 'none';
+            }
+          })
+          .catch(() => {
+            document.getElementById('original-report').style.display = 'none';
+          });
+      });
+
+      async function loadImages() {
+        const gallery = document.getElementById('image-gallery');
+        const totalImagesEl = document.getElementById('total-images');
+
+        try {
+          // Try to fetch the data directory listing (if available)
+          const images = await findPngFiles();
+
+          if (images.length === 0) {
+            gallery.innerHTML = `
                         <div class="no-images">
                             <h3>📷 No Screenshots Found</h3>
                             <p>No PNG files were found in the accessibility test results.<br>
                             This might indicate that tests passed without capturing evidence, or the test execution was interrupted.</p>
                         </div>
                     `;
-                    return;
-                }
-                
-                totalImagesEl.textContent = images.length;
-                
-                gallery.innerHTML = images.map(imagePath => `
+            return;
+          }
+
+          totalImagesEl.textContent = images.length;
+
+          gallery.innerHTML = images
+            .map(
+              imagePath => `
                     <div class="image-card">
                         <img src="${imagePath}" alt="Accessibility test screenshot" 
                              onerror="this.parentElement.style.display='none'">
@@ -221,82 +233,109 @@
                             <div class="image-path">${imagePath}</div>
                         </div>
                     </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Error loading images:', error);
-                gallery.innerHTML = `
+                `
+            )
+            .join('');
+        } catch (error) {
+          console.error('Error loading images:', error);
+          gallery.innerHTML = `
                     <div class="no-images">
                         <h3>⚠️ Error Loading Images</h3>
                         <p>Could not load screenshot gallery. Check browser console for details.</p>
                     </div>
                 `;
-            }
         }
-        
-        async function findPngFiles() {
-            // Common paths where Playwright stores screenshots
-            const possiblePaths = [
-                './data/',
-                './test-results/',
-                './screenshots/',
-                './'
-            ];
-            
-            const images = [];
-            
-            // Try to find PNG files in various locations
-            for (const basePath of possiblePaths) {
-                try {
-                    const response = await fetch(basePath);
-                    if (response.ok) {
-                        const text = await response.text();
-                        // Extract PNG file names from directory listing (if server provides it)
-                        const pngMatches = text.match(/href="[^"]*\.png"/g);
-                        if (pngMatches) {
-                            pngMatches.forEach(match => {
-                                const filename = match.match(/href="([^"]*)"/)[1];
-                                images.push(basePath + filename);
-                            });
-                        }
-                    }
-                } catch (e) {
-                    // Continue checking other paths
-                }
-            }
-            
-            // If no directory listing available, try common screenshot names
-            if (images.length === 0) {
-                const commonNames = [
-                    'accessibility-test-screenshot.png',
-                    'wcag-test-screenshot.png',
-                    'test-failure.png',
-                    'accessibility-violation.png'
-                ];
-                
-                for (const name of commonNames) {
-                    for (const path of possiblePaths) {
-                        try {
-                            const response = await fetch(path + name);
-                            if (response.ok) {
-                                images.push(path + name);
-                            }
-                        } catch (e) {
-                            // Image doesn't exist, continue
-                        }
-                    }
-                }
-            }
-            
-            return [...new Set(images)]; // Remove duplicates
+      }
+
+      async function findPngFiles() {
+        const images = [];
+
+        // First, try to load a manifest file generated during the workflow
+        try {
+          const manifestResponse = await fetch('./screenshots-manifest.json');
+          if (manifestResponse.ok) {
+            const manifest = await manifestResponse.json();
+            console.log('Found screenshots manifest:', manifest);
+            return manifest.screenshots || [];
+          }
+        } catch (e) {
+          console.log('No screenshots manifest found, trying individual file detection');
         }
-        
-        function getImageTitle(imagePath) {
-            const filename = imagePath.split('/').pop().replace('.png', '');
-            return filename.split('-').map(word => 
-                word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ');
+
+        // Fallback: Try comprehensive list of Playwright screenshot patterns
+        const possiblePaths = ['./', './data/', './test-results/'];
+
+        // Common Playwright screenshot naming patterns
+        const screenshotPatterns = [
+          // Accessibility test patterns
+          'accessibility-test-screenshot.png',
+          'wcag-test-screenshot.png',
+          'accessibility-violation.png',
+          'accessibility-scan.png',
+
+          // Playwright test failure patterns
+          'test-failed.png',
+          'test-failure.png',
+          'screenshot-failure.png',
+
+          // Test name based patterns (common in accessibility tests)
+          'WCAG-2-1-Level-A-Critical-Issues-chromium.png',
+          'Modal-Dismissal-Verification-chromium.png',
+          'WCAG-2-1-AA-Level-Full-Page-Scan-chromium.png',
+          'Navigation-and-Keyboard-Accessibility-chromium.png',
+          'Color-Contrast-and-Visual-Accessibility-chromium.png',
+          'Form-and-Input-Accessibility-chromium.png',
+          'Images-and-Media-Accessibility-chromium.png',
+          'Semantic-HTML-and-Landmarks-chromium.png',
+          'Screen-Reader-Compatibility-chromium.png',
+          'Dynamic-Content-Accessibility-chromium.png',
+          'Trading-Interface-Specific-Tests-chromium.png',
+          'Mobile-Accessibility-Responsive-chromium.png',
+          'High-Contrast-Mode-Simulation-chromium.png',
+          'Custom-WCAG-Rules-Crypto-Specific-chromium.png',
+          'Generate-Detailed-Accessibility-Report-chromium.png',
+
+          // Browser variations
+          'WCAG-2-1-Level-A-Critical-Issues-firefox.png',
+          'WCAG-2-1-Level-A-Critical-Issues-webkit.png',
+
+          // Generic numbered screenshots (if tests generate them)
+          'screenshot-1.png',
+          'screenshot-2.png',
+          'screenshot-3.png',
+          'screenshot-4.png',
+          'screenshot-5.png',
+
+          // Timestamped patterns (common format)
+          'accessibility-violation-[0-9]*.png',
+        ];
+
+        // Test each possible screenshot
+        for (const basePath of possiblePaths) {
+          for (const pattern of screenshotPatterns) {
+            try {
+              const fullPath = basePath + pattern;
+              const response = await fetch(fullPath, { method: 'HEAD' });
+              if (response.ok) {
+                images.push(fullPath);
+                console.log('Found screenshot:', fullPath);
+              }
+            } catch (e) {
+              // Image doesn't exist, continue silently
+            }
+          }
         }
+
+        return [...new Set(images)]; // Remove duplicates
+      }
+
+      function getImageTitle(imagePath) {
+        const filename = imagePath.split('/').pop().replace('.png', '');
+        return filename
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      }
     </script>
-</body>
+  </body>
 </html>

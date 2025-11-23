@@ -126,10 +126,43 @@ jobs:
             mv combined-reports/wcag/index.html combined-reports/wcag/data/
             cp .github/templates/wcag-gallery.html combined-reports/wcag/index.html
             
+            # Generate screenshots manifest for the gallery
+            echo "📋 Generating screenshots manifest..."
+            echo "{" > combined-reports/wcag/screenshots-manifest.json
+            echo '  "generated": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'",' >> combined-reports/wcag/screenshots-manifest.json
+            echo '  "screenshots": [' >> combined-reports/wcag/screenshots-manifest.json
+            
+            # Find all PNG files in accessibility-report and test-results
+            SCREENSHOT_FILES=""
+            for dir in accessibility-report test-results; do
+              if [ -d "$dir" ]; then
+                for png_file in $(find "$dir" -name "*.png" -type f 2>/dev/null); do
+                  # Copy PNG to wcag directory and add to manifest
+                  relative_path=$(echo "$png_file" | sed 's|^[^/]*/||')
+                  cp "$png_file" "combined-reports/wcag/$relative_path" 2>/dev/null || true
+                  if [ -n "$SCREENSHOT_FILES" ]; then
+                    SCREENSHOT_FILES="$SCREENSHOT_FILES,"
+                  fi
+                  SCREENSHOT_FILES="$SCREENSHOT_FILES    \"./$relative_path\""
+                done
+              fi
+            done
+            
+            echo "$SCREENSHOT_FILES" >> combined-reports/wcag/screenshots-manifest.json
+            echo '  ]' >> combined-reports/wcag/screenshots-manifest.json
+            echo '}' >> combined-reports/wcag/screenshots-manifest.json
+            
+            # Show manifest content for debugging
+            echo "📋 Screenshots manifest generated:"
+            cat combined-reports/wcag/screenshots-manifest.json
+            
           else
             echo "⚠️ WCAG report not found, creating placeholder"
             mkdir -p combined-reports/wcag
             cp .github/templates/wcag-failed.html combined-reports/wcag/index.html
+            
+            # Create empty manifest for failed tests
+            echo '{"generated": "'$(date -u +"%Y-%m-%dT%H:%M:%SZ")'", "screenshots": []}' > combined-reports/wcag/screenshots-manifest.json
           fi
 
       - name: Update main page with metadata
