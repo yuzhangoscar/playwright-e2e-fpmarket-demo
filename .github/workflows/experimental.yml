@@ -1,7 +1,8 @@
 name: Events Demo
 
 on:
-  fork:
+  issues:
+    types: [opened, edited, milestoned]
 
 permissions:
   contents: read
@@ -12,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Setup environment for API tests
+      - name: Provide the whole log of this event
         run: |
-          # silly loggings
+          echo "----START----"
           echo "this is logging from Events Demo upon ${{ github.event_name }}"
+          echo "the action we took is ${{ github.event.action }}"
