@@ -1,0 +1,18 @@
+name: Events Demo
+
+on:
+  fork:
+
+permissions:
+  contents: read
+
+jobs:
+  logging:
+    name: Logging in the console
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Setup environment for API tests
+        run: |
+          # silly loggings
+          echo "this is logging from Events Demo upon ${{ github.event_name }}"
