@@ -1,8 +1,8 @@
 name: Events Demo
 
 on:
-  issues:
-    types: [opened, edited, milestoned]
+  schedule:
+    - cron: '0 0 * * SUN'
 
 permissions:
   contents: read
@@ -19,7 +19,7 @@ jobs:
           touch script.sh
           cat >> script.sh << 'EOF'
           #!/bin/bash
-          echo "this is from script.sh"
+          echo "this is a scheduled event executed at $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           EOF
           chmod +x script.sh
           ./script.sh
